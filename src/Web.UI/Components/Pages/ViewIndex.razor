@@ -1,0 +1,151 @@
+@page "/viewidx"
+@inject IIndexService IdxService
+
+<MudText Typo="Typo.h3">View Index</MudText>
+<br />
+@if (!IdxService.IsInitialized())
+{
+    <MudText Typo="Typo.subtitle1">Service Initializing...</MudText>
+    <MudPaper Elevation="3">
+        <MudSkeleton />
+        <MudSkeleton />
+        <MudSkeleton />
+    </MudPaper>
+}
+else
+{
+
+    <MudText Typo="Typo.subtitle1">Index contains @viewList.Count() entries</MudText>
+    <MudText Typo="Typo.subtitle1">@buildTime</MudText>
+    <MudPaper Elevation="3" Class="mt6 pa-3 d-flex flex-column overflow-x-auto" Width="80%" MaxHeight="80vh">
+        @if (entryCount > 100)
+        {
+            <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.Center" Spacing="8" Class="pb-3">
+                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="flex-grow-0">
+                    <MudSelect T="int" Value="@pageSize" ValueChanged="PageSizeChanged" Class="mud-width-full" Style="width: 75px;">
+                        <MudSelectItem T="int" Value="100">100</MudSelectItem>
+                        @if (entryCount > 250)
+                        {
+                            <MudSelectItem T="int" Value="250">250</MudSelectItem>
+                        }
+                        @if (entryCount > 500)
+                        {
+                            <MudSelectItem T="int" Value="500">500</MudSelectItem>
+                        }
+                        @if (entryCount > 1000)
+                        {
+                            <MudSelectItem T="int" Value="1000">1000</MudSelectItem>
+                        }
+                    </MudSelect>
+                    <MudText Typo="Typo.body2">Items Per Page</MudText>
+                </MudStack>
+                <MudPagination Color="Color.Primary" Count="@pageCount" Selected="@selectedPage" SelectedChanged="SelectedPageChanged" />
+                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="flex-grow-0">
+                    <MudText Typo="Typo.body2">Jump to Page</MudText>
+                    <MudSelect T="int" Value="@selectedPage" ValueChanged="SelectedPageChanged" Class="mud-width-full" Style="width: 75px;">
+                        @for (int i = 1; i <= pageCount; i++)
+                        {
+                            var pageNumber = i;
+                            <MudSelectItem T="int" Value="@pageNumber">@pageNumber</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudStack>
+            </MudStack>
+        }
+
+        @if (isLoading)
+        {
+            <MudText Class="mx-auto" Typo="Typo.body2">
+                <div class='loading-container'>
+                    <div class='loading-bar'></div>
+                    <div class='loading-text'>Loading Items...</div>
+                </div>
+            </MudText>
+        }
+        @foreach (var entry in resultList)
+        {
+            <MudText Typo="Typo.body2">
+                [Document Id] - @entry.DocumentId &nbsp; [Word] - @entry.Word - &nbsp; [Positions] -
+                <MudTooltip>
+                    <TooltipContent>
+                        @(string.Join(", ", entry.Positions))
+                    </TooltipContent>
+                    <ChildContent>
+                        ( @entry.Positions.Count() )
+                    </ChildContent>
+                </MudTooltip>
+
+            </MudText>
+        }
+    </MudPaper>
+}
+<style>
+    .mud-select .mud-input {
+        text-align: center;
+    }
+
+    .mud-select-menu .mud-list-item-text {
+        justify-content: center;
+    }
+</style>
+@code {
+    List<IndexEntry> viewList = [];
+    List<IndexEntry> resultList = [];
+    string buildTime = string.Empty;
+    private bool isLoading = false;
+    private int entryCount = 0;
+    private int pageCount = 1;
+    private int selectedPage = 1;
+    private int pageSize = 100;
+
+    protected async override Task OnInitializedAsync()
+    {
+        var tempList = await IdxService.GetIndexAsync();
+        viewList = tempList.OrderBy(i => i.Word).ToList();
+        entryCount = viewList.Count;
+        pageCount = (int)Math.Ceiling((double)entryCount / pageSize);
+        buildTime = $"Initial index build completed in {IdxService.LoadTime():ss\\:fffffff} seconds : ticks";
+    }
+
+    protected async override Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await ShowPagedIndex();
+        }
+    }
+
+    private async Task PageSizeChanged(int val)
+    {
+
+        if (pageSize != val)
+        {
+            pageSize = val;
+            await ShowPagedIndex();
+        }
+    }
+
+    private async Task SelectedPageChanged(int val)
+    {
+        if (selectedPage != val)
+        {
+            selectedPage = val;
+            await ShowPagedIndex();
+        }
+    }
+
+    private async Task ShowPagedIndex()
+    {
+        isLoading = true;
+        resultList.Clear();
+        StateHasChanged();
+        foreach (var result in viewList.Skip((selectedPage - 1) * pageSize).Take(pageSize).ToList())
+        {
+            resultList.Add(result);
+            await Task.Delay(5);
+            StateHasChanged();
+        }
+        isLoading = false;
+        StateHasChanged();
+    }
+}

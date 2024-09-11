@@ -1,0 +1,27 @@
+
+<MudTooltip Text="@Email">
+    <MudCard Style="Width: 100%" Class="contactcard" Elevation="0">
+        <MudChip T="string" Style="background: transparent;">
+            <AvatarContent>
+                <MudAvatar Size="Size.Large">
+                    <MudImage Src="@avatarImage" />
+                </MudAvatar>
+            </AvatarContent>
+            <ChildContent>
+                <MudText Typo="Typo.subtitle1" Color="Color.Secondary">
+                    @if (!HideName)
+                    {
+                        @DisplayName;   
+                    }                    
+                </MudText>
+            </ChildContent>
+        </MudChip>
+    </MudCard>
+</MudTooltip>
+
+@code {
+    [Parameter] public bool HideName { get; set; } = false;
+    private string avatarImage = "images/VJ.webp";
+    private string DisplayName = "Versile R. Johnson II";
+    private string Email = "versilej@gmail.com";
+}

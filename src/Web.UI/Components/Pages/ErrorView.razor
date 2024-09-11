@@ -1,0 +1,98 @@
+@inject IErrorService ErrorService
+@inject IDialogService DialogSvc
+@implements IDisposable
+@page "/viewerror"
+
+<MudText Typo="Typo.h3">Application Errors</MudText>
+<br/>
+<MudDataGrid T="AppError" Items="_appErrors"
+             FixedHeader="true" Dense="true" SortMode="SortMode.None" Filterable="false" RowsPerPage="10">
+             <ToolBarContent>
+                 <MudStack Row="true" Spacing="4" Justify="Justify.FlexStart" AlignItems="AlignItems.Center">
+            <MudText Typo="Typo.subtitle2">This Table Auto Updates: </MudText>
+                    <MudCheckBox T="bool" @bind-Value="newChecked" Label="New" />
+                    <MudCheckBox T="bool" @bind-Value="ackChecked" Label="Acknowledged" />
+                    <MudCheckBox T="bool" @bind-Value="resChecked" Label="Resolved" />
+                 </MudStack>
+             </ToolBarContent>
+             <Columns>
+                 <PropertyColumn Property="x => x.TimeStamp.ToLocalTime()" Format="MM/dd/yyyy 'at' hh:mm tt" />
+                 <PropertyColumn Property="x => x.LoggedBy" />
+                 <PropertyColumn Property="x => x.Type" />
+                 <PropertyColumn Property="x => x.ErrorStatus.ErrorStatusText" />
+                 <PropertyColumn Property="x => x.Message" />
+                 <TemplateColumn>
+                     <CellTemplate>
+                         <MudButton Variant="Variant.Outlined" OnClick="@(async() => await ViewError(context.Item))">View</MudButton>
+                         <MudButton Variant="Variant.Outlined" OnClick="@(async() => await EditError(context.Item, 2))">Acknowledge</MudButton>
+                         <MudButton Variant="Variant.Outlined" OnClick="@(async() => await EditError(context.Item, 3))">Resolve</MudButton>
+                     </CellTemplate>
+                 </TemplateColumn>
+             </Columns>
+</MudDataGrid>
+
+@code {
+    List<AppError> _appErrors = [];
+    private bool newChecked = true;    // ErrorStatusId = 1
+    private bool ackChecked = true;    // ErrorStatusId = 2
+    private bool resChecked = false;   // ErrorStatusId = 3
+
+    protected override async Task OnInitializedAsync()
+    {
+        var errorList = await ErrorService.GetApp_ErrorsAsync();
+        if (errorList?.Count > 0)
+        {
+            _appErrors = GetSortedandFilteredErrors(errorList);
+        }
+        ErrorService.ErrorChanged += OnErrorChanged;
+    }
+
+    public void Dispose()
+    {
+        ErrorService.ErrorChanged -= OnErrorChanged;
+    }
+
+    private void OnErrorChanged(object? sender, ErrorChangeEventArgs eventArgs)
+    {
+        switch (eventArgs.ChangeType)
+        {
+            case ChangeType.Added:
+                _appErrors.Add(eventArgs.AppError);
+                break;
+            case ChangeType.Updated:
+                var existingError  = _appErrors.FirstOrDefault(x => x.ErrorId == eventArgs.AppError.ErrorId);
+                if (existingError != null) _appErrors[_appErrors.IndexOf(existingError)] = eventArgs.AppError;
+                break;
+            case ChangeType.Deleted:
+                _appErrors.RemoveAll(x => x.ErrorId == eventArgs.AppError.ErrorId);
+                break;
+        }
+        _appErrors = GetSortedandFilteredErrors(_appErrors);
+        StateHasChanged();
+    }
+
+    private List<AppError> GetSortedandFilteredErrors(List<AppError> appErrors)
+    {
+        return
+            appErrors?
+                .Where(x => (newChecked && x.ErrorStatusId == 1) ||
+                            (ackChecked && x.ErrorStatusId == 2) ||
+                            (resChecked && x.ErrorStatusId == 3))
+                .OrderByDescending(e => e.TimeStamp)
+                .ToList() ?? [];
+    }
+
+    private async Task ViewError(AppError appError)
+    {
+        var parameters = new DialogParameters();
+        parameters.Add("Error", appError);
+        var dialogOptions = new DialogOptions { CloseButton = true, CloseOnEscapeKey = true };
+        var dialogRef = await DialogSvc.ShowAsync<AppErrorDialog>($"Details for Log: {appError.ErrorId}", parameters, dialogOptions);
+    }
+
+    private async Task EditError(AppError appError, int newStatusId)
+    {
+        appError.ErrorStatusId = newStatusId;
+        await ErrorService.EditErrorAsync(appError);
+    }
+}

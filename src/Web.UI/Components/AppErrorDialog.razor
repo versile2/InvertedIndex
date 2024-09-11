@@ -1,0 +1,99 @@
+@inject IJSRuntime JSRuntime
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <DialogContent>
+        <MudTable @ref="_kvpTable" T="KeyValuePair<string,string>" Items="_errorProps" Hover="true" Striped="true" Dense="true" >
+            <ColGroup>
+                <col />
+                <col />
+            </ColGroup>
+            <RowTemplate>
+                <MudTd DataLabel="Property">
+                    @if (context.Key == "Additional Data" && context.Value.Length > 0)
+                    {
+                        <MudText>Stack&nbsp;Trace</MudText>
+                    }
+                    else
+                    {
+                        @context.Key
+                    }
+                </MudTd>
+                <MudTd DataLabel="Value">@context.Value</MudTd>
+            </RowTemplate>
+        </MudTable>
+    </DialogContent>
+    <DialogActions>
+        <MudGrid Justify="Justify.Center" Class="mt-0 mb-2">
+            <MudButton StartIcon="@Icons.Material.Filled.ContentCopy" Variant="Variant.Outlined" OnClick="@(async () => await CopyToClipboard())">
+                Copy To Clipboard
+            </MudButton>
+        </MudGrid>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [Parameter] public AppError Error { get; set; } = default!;
+    private MudTable<KeyValuePair<string,string>> _kvpTable = default!;
+    private IEnumerable<KeyValuePair<string, string>> _errorProps = [];
+
+    protected override void OnInitialized()
+    {
+        if (Error != null)
+            _errorProps = GetErrorProperties();
+    }
+
+    private IEnumerable<KeyValuePair<string, string>> GetErrorProperties()
+    {
+        yield return new KeyValuePair<string, string>("Timestamp", FormatDateTime(Error.TimeStamp, TimeZoneInfo.FindSystemTimeZoneById("Central Standard Time")));
+        yield return new KeyValuePair<string, string>("Logged By", Error.LoggedBy);
+        yield return new KeyValuePair<string, string>("Status", Error.ErrorStatus.ErrorStatusText);
+        yield return new KeyValuePair<string, string>("Type", Error.Type);
+        yield return new KeyValuePair<string, string>("Message", Error.Message);        
+        yield return new KeyValuePair<string, string>("Additional Data", Error.Data ?? string.Empty);
+    }
+
+    private string FormatDateTime(DateTime utcDateTime, TimeZoneInfo timeZone)
+    {
+        var localTime = TimeZoneInfo.ConvertTimeFromUtc(utcDateTime, timeZone);
+        var offset = timeZone.GetUtcOffset(localTime);
+        var timeZoneName = timeZone.IsDaylightSavingTime(localTime) ?
+            timeZone.DaylightName : timeZone.StandardName;
+
+        return $"{localTime:ddd MMM dd yyyy HH:mm:ss} " +
+               $"GMT{offset.Hours:+00;-00}:{offset.Minutes:00} " +
+               $"({timeZoneName})";
+    }
+
+    private async Task CopyToClipboard()
+    {
+        string content = FormatTableForClipboard();
+        var result = await JSRuntime.InvokeAsync<ClipBoardResult>("clipboardCopy.copyText", content);
+        Snackbar.Add(result.Message, result.Success ? Severity.Success : Severity.Warning);
+    }
+
+    private string FormatTableForClipboard()
+    {
+        var sb = new System.Text.StringBuilder();
+
+        sb.AppendLine("Error Details");
+        sb.AppendLine();
+
+        // Calculate the maximum width of the property names for alignment
+        int maxPropertyWidth = _errorProps.Max(kvp => kvp.Key.Length);
+
+        foreach (var kvp in _errorProps)
+        {
+            string key = kvp.Key == "Additional Data" && !string.IsNullOrEmpty(kvp.Value) ? "Stack Trace"  : kvp.Key;
+            string val = key == "Stack Trace" ? Environment.NewLine + kvp.Value : kvp.Value;
+            sb.AppendLine($"{key.PadRight(maxPropertyWidth)}: {val}");
+        }
+
+        return sb.ToString();
+    }
+
+    private record ClipBoardResult(bool Success, string Message)
+    {
+
+    }
+}

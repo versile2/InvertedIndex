@@ -1,0 +1,115 @@
+@using System.Web
+@inject IDocumentRepository DocRepo
+@inject IIndexService IdxService
+@using System.Text
+@using Web.DAL.Utilities
+
+@if (Entry != null)
+{
+    <MudText Typo="Typo.h4">Search Results</MudText>
+    <MudPaper Elevation="3" Class="mt-3 pa-3 d-flex flex-column overflow-x-auto" Width="80%" MaxHeight="95vh">
+        @foreach (var item in resultList)
+        {
+            <MudText Typo="Typo.h5" Class="text-center">@item.Item2</MudText>
+            <MudText Typo="Typo.body2">
+                @item.Item1
+            </MudText>
+        }
+    </MudPaper>
+}
+
+@code {
+    [Parameter] public VM_SearchResult? Entry { get; set; } = null;
+    [Parameter] public EventCallback<VM_SearchResult> EntryChanged { get; set; }
+    List<(MarkupString, string)> resultList = [];
+    private Document doc = default!;
+
+    protected async override Task OnParametersSetAsync()
+    {
+        if (Entry == null)
+        {
+            resultList = [];
+            return;
+        }        
+        MarkupString loadingItem =
+            (MarkupString)@"
+                <div class='loading-container'>
+                <div class='loading-bar'></div>
+                <div class='loading-text'>Loading Items...</div>
+                </div>";
+        resultList.Clear();
+        var opResult = await DocRepo.GetDocumentWithContentById(Entry.DocumentId);
+        if (!opResult.Success && opResult.Data != null)
+        {
+            loadingItem = (MarkupString)"<span style='color: var(--mud-palette-error);'>Failed to load Document.</span>";
+            resultList.Add((loadingItem, string.Empty));
+            return;
+        }
+        doc = opResult.Data!;
+        var entry = await IdxService.GetIndicesInContent(doc, new IndexEntry{ DocumentId = Entry.DocumentId, Positions = Entry.Positions, Word = Entry.Word});
+        resultList.Add((loadingItem, string.Empty));
+        foreach (var positionId in entry.Positions)
+        {
+            resultList.Add(await ShowTextAsync(Entry, positionId));
+            await Task.Delay(5);
+            StateHasChanged();
+        }
+        resultList.Remove((loadingItem, string.Empty));
+    }
+
+    private Task<(MarkupString, string)> ShowTextAsync(VM_SearchResult searchResult, int positionId)
+    {
+        string searchWord = searchResult.Word;
+
+            string fileName = doc.FileName;
+            var content = doc.Content;
+
+            if (positionId >= 0 && positionId < content.Length)
+            {
+                // Find the start of the context (2 newlines before)
+                int contextStart = positionId;
+                int newlineCount = 0;
+                while (contextStart > 0 && newlineCount < 2)
+                {
+                    contextStart--;
+                    if (content[contextStart] == '\n')
+                        newlineCount++;
+                }
+                contextStart = (newlineCount == 2) ? contextStart + 1 : 0;
+
+                // Find the end of the context (2 newlines after)
+                int contextEnd = positionId;
+                newlineCount = 0;
+                while (contextEnd < content.Length && newlineCount < 2)
+                {
+                    if (content[contextEnd] == '\n')
+                        newlineCount++;
+                    contextEnd++;
+                }
+
+                // Extract the context
+                string context = content.Substring(contextStart, contextEnd - contextStart);
+
+                // Find the word boundaries
+                int wordStart = positionId;
+                while (wordStart > contextStart && !char.IsWhiteSpace(content[wordStart - 1]))
+                    wordStart--;
+
+                int wordEnd = positionId;
+                while (wordEnd < contextEnd && !char.IsWhiteSpace(content[wordEnd]))
+                    wordEnd++;
+
+                // Build the result
+                var result = new StringBuilder();
+                result.Append($"[{searchResult.DocumentId} - Pos:{positionId}]<br/>");
+                result.Append(HttpUtility.HtmlEncode(context.Substring(0, wordStart - contextStart)));
+                result.Append($"<span style='background-color: var(--mud-palette-info);'>{HttpUtility.HtmlEncode(content.Substring(wordStart, wordEnd - wordStart))}</span>");
+                result.Append(HttpUtility.HtmlEncode(context.Substring(wordEnd - contextStart)));
+
+                return Task.FromResult(((MarkupString)result.ToString().Replace("\n", "<br/>"), fileName));
+            }
+
+            // Fallback if the position is out of range
+            return Task.FromResult(((MarkupString)$"<span style='color: red;'>Unable to locate the word '{HttpUtility.HtmlEncode(searchWord)}' at position {positionId} in the document.</span>", fileName));
+    }
+}

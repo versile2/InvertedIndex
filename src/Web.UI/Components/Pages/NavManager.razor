@@ -1,0 +1,266 @@
+@page "/ManageNav"
+@inject IDialogService DialogSvc
+
+<!-- attribute [Authorize(Roles = "adminrole")] -->
+
+<PageTitle>Manage Navigation</PageTitle>
+
+<MudText Typo="Typo.h3">Manage Navigation</MudText>
+<br />
+<MudDataGrid @ref="_dataGrid" T="VM_NavLink" Items="@_navLinks" Loading="@_loading" QuickFilter="@_quickFilter"
+			 FixedHeader="true" Dense="true" SortMode="SortMode.None" Filterable="false" RowsPerPage="10"
+			 EditMode="DataGridEditMode.Form" ReadOnly="false" Groupable="true"
+			 CommittedItemChanges="@CommittedItemChanges" EditTrigger="DataGridEditTrigger.Manual">
+	<ToolBarContent>
+		<MudText Typo="Typo.h5">Navigation</MudText>
+		<MudSpacer />
+		<MudSwitch Value="@_groupParent" ValueChanged="@((bool val) => GroupItems(val))" LabelPosition="LabelPosition.End">
+			<MudText Typo="Typo.body2">Show Grouped</MudText>
+		</MudSwitch>
+		<MudButton Variant="Variant.Filled" Color="Color.Success" Class="add-item-btn" OnClick="@(() => _dataGrid.SetEditingItemAsync(new VM_NavLink()))">Add Item</MudButton>
+		<MudItem>
+			<MudTextField @bind-Value="_searchString" Placeholder="Search" Adornment="Adornment.Start" Immediate="true" Class="mb-4 ml-3 pr-5"
+						  AdornmentIcon="@Icons.Material.Filled.Search" Style="color: #ffffff;width: 450px;" IconSize="Size.Medium"></MudTextField>
+		</MudItem>
+	</ToolBarContent>
+	<Columns>
+		<TemplateColumn Title="Icon">
+			<CellTemplate>
+				<MudIcon Icon="@context.Item.Icon" />
+			</CellTemplate>
+			<EditTemplate>
+				<MudExIconPicker PickerVariant="PickerVariant.Inline" @bind-Value="@context.Item.Icon" Label="Select Icon" />
+			</EditTemplate>
+		</TemplateColumn>
+		<PropertyColumn Property="x => x.Title" Title="Title" />
+		<PropertyColumn Property="x => x.OrderById" Title="Order" />
+		<PropertyColumn Property="x=>x.Href" Title="Navigation" Required="false" />
+		<PropertyColumn Property="x => x.Role" Title="Roles" Required="false">
+			<EditTemplate>
+				<MudTooltip Text="You can set multiple Roles, just seperate each role by a comma. So Role1,Role2. If a user has access to any role listed the user has access to the navigation item.">
+					<MudTextField @bind-Value="@context.Item.Role" Placeholder="Roles" />
+				</MudTooltip>
+			</EditTemplate>
+		</PropertyColumn>
+		<PropertyColumn Property="x=> x.IsActive" Title="Active">
+			<EditTemplate>
+				<MudCheckBox @bind-Value="context.Item.IsActive" Label="Nav Item Is Active" />
+			</EditTemplate>
+		</PropertyColumn>
+		<PropertyColumn Property="x=> x.IsNewWindow" Title="New">
+			<EditTemplate>
+				<MudCheckBox @bind-Value="context.Item.IsNewWindow" Label="Open In New Window" />
+			</EditTemplate>
+		</PropertyColumn>
+		@if (_groupParent)
+		{
+			<PropertyColumn Property="x => x.ParentId > 0 ? _parents[x.ParentId] : x.Title" Title="Parent" Grouping="true" Hidden="true">
+				<GroupTemplate>
+					@{
+						int counter = context.Grouping.Count() - 1;
+						string itemText = counter > 0 ? counter.ToString() : string.Empty ;
+						itemText += counter == 0 ? string.Empty : counter > 1 ? " child items" : " child item";
+						var order = _navLinks.FirstOrDefault(x => x.Title == (string)context.Grouping.Key)?.OrderById;
+						string orderText = order != null ? $"{order}" : "N/A";
+					}
+					<MudChip>
+						<table style="font-weight: bold;">
+							<tr>
+								<td style="width: 190px;">@context.Grouping.Key</td>
+								<td style="width: 175px;">@itemText</td>
+								<td style="width: 30px;">@orderText</td>
+							</tr>
+						</table>
+					</MudChip>
+				</GroupTemplate>
+				<EditTemplate>
+					<MudSelect @bind-Value="context.Item.ParentId" Margin="@Margin.Dense">
+						@if (context.Item.NavLinkId == 0)
+						{
+							<MudSelectItem Value="0">No Parent</MudSelectItem>
+						}
+						else
+						{
+							<MudSelectItem Value="-1">No Parent</MudSelectItem>
+						}
+						@foreach (var parent in _parents)
+						{
+							if (parent.Key != context.Item.NavLinkId)
+							{
+								<MudSelectItem Value="parent.Key">@parent.Value</MudSelectItem>
+							}
+						}
+					</MudSelect>
+				</EditTemplate>
+			</PropertyColumn>
+		}
+		else
+		{
+			<PropertyColumn Property="x => x.ParentId > 0 ? _parents[x.ParentId] : string.Empty" Title="Parent">
+				<EditTemplate>
+					<MudSelect @bind-Value="context.Item.ParentId" Margin="@Margin.Dense">
+						@if (context.Item.NavLinkId == 0)
+						{
+							<MudSelectItem Value="0">No Parent</MudSelectItem>
+						}
+						else
+						{
+							<MudSelectItem Value="-1">No Parent</MudSelectItem>
+						}
+						@foreach (var parent in _parents)
+						{
+							if (parent.Key != context.Item.NavLinkId)
+							{
+								<MudSelectItem Value="parent.Key">@parent.Value</MudSelectItem>
+							}
+						}
+					</MudSelect>
+				</EditTemplate>
+			</PropertyColumn>
+		}
+		<TemplateColumn CellClass="d-flex justify-end">
+			<CellTemplate>
+				<MudIconButton Size="@Size.Small" Icon="@Icons.Material.Outlined.Edit" OnClick="@context.Actions.StartEditingItemAsync" />
+				<MudIconButton Size="@Size.Small" Icon="@Icons.Material.Outlined.Delete" OnClick="@(() => RemoveItem(@context.Item))" />
+			</CellTemplate>
+		</TemplateColumn>
+	</Columns>
+</MudDataGrid>
+
+
+@code {
+    [Inject]
+    private INavigationRepository _navRepo { get; set; } = default!;
+    private string _searchString = string.Empty;
+    private bool _loading = true;
+    private readonly List<VM_NavLink> _navLinks = [];
+    private Dictionary<int, string> _parents = [];
+    private MudDataGrid<VM_NavLink> _dataGrid = default!;
+    private bool _groupParent = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadNavs();
+    }
+
+    private async Task LoadNavs()
+    {
+        _navLinks.Clear();
+        var navLinkList = await _navRepo.GetNavigationMenuAsync();
+        // add root level links then recursively add their children. Do this in the same manner as the NavMenu
+        foreach (var nav in navLinkList.Where(x => !x.ParentId.HasValue).OrderBy(n => n.OrderById).ToList())
+        {
+            AddNav(nav, nav.ChildNavLinks);
+        }
+        _parents = navLinkList.OrderBy(m => m.Title).ToDictionary(m => m.NavLinkId, m => m.Title);
+        _loading = false;
+        StateHasChanged();
+    }
+
+    private void AddNav(Data_NavLink parent, List<Data_NavLink> childNavLinks)
+    {
+        _navLinks.Add(new VM_NavLink(parent));
+        if (parent.ChildNavLinks.Any())
+        {
+            foreach (var nav in childNavLinks)
+            {
+                AddNav(nav, nav.ChildNavLinks);
+            }
+        }
+    }
+
+    private void GroupItems(bool val)
+    {
+        _groupParent = val;
+        _dataGrid.GroupItems();
+        StateHasChanged();
+    }
+
+    private async Task RemoveItem(VM_NavLink item)
+    {
+        _loading = true;
+
+        var parameters = new DialogParameters();
+        var dialogOptions = new DialogOptions { CloseButton = false, CloseOnEscapeKey = false };
+        var dialogRef = await DialogSvc.ShowAsync<DeleteDialog>("Warning", parameters, dialogOptions);
+
+        var result = await dialogRef.Result;
+
+        await (result switch
+        {
+            { Canceled: false, Data: true } => _navRepo.RemoveNavLink(item.NavLinkId),
+            _ => Task.CompletedTask
+        });
+		await LoadNavs();
+		_loading = false;
+	}
+
+	private async Task CommittedItemChanges(VM_NavLink item)
+	{
+		_loading = true;
+		if (!string.IsNullOrEmpty(item.Role))
+		{
+			string[] roles = item.Role.Split(',', StringSplitOptions.RemoveEmptyEntries)
+							.Select(r => r.Trim())
+							.ToArray();
+			List<string> unknownRoles = [];
+			if (roles.Length > 0)
+			{
+				// var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+				foreach (var role in roles)
+				{
+					// if (!authState.User.IsInRole(role))  // see if role entered is a valid role for this user
+					{
+						unknownRoles.Add(role);
+					}
+				}
+			}
+			if (unknownRoles.Count > 0)
+			{
+				var result = await DialogSvc.ShowMessageBox(
+				"Warning",
+					(MarkupString)$"<center>The following role(s) are either unknown to you, or don't exist. Are you sure?<br/><b>{string.Join(", ", unknownRoles)}</b></center>",
+					"Yes", "No");
+				if (!result.HasValue || !result.Value)
+				{
+					// They chose no or cancelled out
+					_loading = false;
+					return;
+				}
+			}
+		}
+		var opResult = await _navRepo.AddUpdateNavLink(new Data_NavLink
+			{
+				NavLinkId = item.NavLinkId,
+				Href = item.Href,
+				Title = item.Title,
+				IsActive = item.IsActive,
+				IsNewWindow = item.IsNewWindow,
+				OrderById = item.OrderById,
+				Icon = item.Icon,
+				Role = item.Role != null ? item.Role.Trim() : null,
+				ParentId = item.ParentId > 0 ? item.ParentId : null,
+			});
+		await LoadNavs();
+
+		_loading = false;
+	}
+
+	// quick filter - filter globally across multiple columns with the same input
+	private Func<VM_NavLink, bool> _quickFilter => x =>
+	{
+		if (string.IsNullOrWhiteSpace(_searchString))
+			return true;
+
+		if (x.Title.Contains(_searchString, StringComparison.OrdinalIgnoreCase))
+			return true;
+
+		if (x.Href != null && x.Href.Contains(_searchString, StringComparison.OrdinalIgnoreCase))
+			return true;
+
+		if (x.Role != null && x.Role.Contains(_searchString, StringComparison.OrdinalIgnoreCase))
+			return true;
+
+		return false;
+	};
+}

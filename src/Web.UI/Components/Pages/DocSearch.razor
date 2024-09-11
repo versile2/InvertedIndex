@@ -1,0 +1,40 @@
+@page "/docsearch"
+@inject IIndexService IdxService
+@inject IDocumentRepository DocRepo
+
+<MudText Typo="Typo.h3">Document Search (Inverted Index)</MudText>
+<br />
+@if (!IdxService.IsInitialized())
+{
+    <MudText Typo="Typo.subtitle1">Service Initializing...</MudText>
+    <MudPaper Elevation="3">
+        <MudSkeleton />
+        <MudSkeleton />
+        <MudSkeleton />
+    </MudPaper>
+}
+else
+{
+    <MudAutocomplete T="VM_SearchResult" Label="Document Search" @bind-Value="entry" Style="max-width: 450px;"
+                     SearchFunc="@SearchIndex" ResetValueOnEmptyText AdornmentIcon="@Icons.Material.Filled.Search" AdornmentColor="Color.Primary" />
+}
+<br />
+    <IndexResults @bind-Entry="entry" />
+
+@code {
+    VM_SearchResult? entry { get; set; }
+    string fileName { get; set; } = string.Empty;
+    List<Document> docs = [];
+
+    protected async override Task OnInitializedAsync() => docs = await DocRepo.GetAllDocumentsAsync();
+
+    private async Task<IEnumerable<VM_SearchResult>> SearchIndex(string value, CancellationToken token)
+    {
+        if (string.IsNullOrEmpty(value))
+            return [];
+
+        var results = await IdxService.SearchAsync(value);
+        
+        return results.Select(x => new VM_SearchResult(x, docs.FirstOrDefault(d => d.DocumentId == x.DocumentId)));
+    }
+}

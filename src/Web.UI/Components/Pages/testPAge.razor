@@ -1,0 +1,125 @@
+@page "/testpage"
+
+<MudTable T="itemForSale" Items="itemsForSale" Dense="true">
+    <HeaderContent>
+        <MudTh>Name</MudTh>
+        <MudTh>Description</MudTh>
+        <MudTh>Price</MudTh>
+        <MudTh>Quantity</MudTh>
+        <MudTh></MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd>@context.Name</MudTd>
+        <MudTd>@context.Description</MudTd>
+        <MudTd>@context.Cost.ToString("c")</MudTd>
+        <MudTd>
+            <MudNumericField @bind-Value="@context.Quantity" Style="height: 30px; width:80px; padding: 5px; font-size: 14px;" Immediate="true" Variant="Variant.Outlined" Min="0" />
+        </MudTd>
+        <MudTd><MudIconButton Icon="@Icons.Material.Filled.Add" Variant="Variant.Outlined" Color="Color.Primary" OnClick="@(() => AddItemToOrder(context))" /></MudTd>
+    </RowTemplate>
+</MudTable>
+<MudText Typo="Typo.h6"><b>@addString</b></MudText>
+<MudText Typo="Typo.h5" Class="mt-4"><b>Current Order:</b></MudText>
+<MudTable Items="itemsOnOrder" Hover="true" Breakpoint="Breakpoint.Sm" LoadingProgressColor="Color.Info" Dense="true">
+    <HeaderContent>
+        <MudTh>Name</MudTh>
+        <MudTh>Unit Price</MudTh>
+        <MudTh>Quantity</MudTh>
+        <MudTh>Total</MudTh>
+        <MudTh></MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd DataLabel="Name">@context.Name</MudTd>
+        <MudTd DataLabel="Unit Price">@context.Cost.ToString("c")</MudTd>
+        <MudTd DataLabel="Quantity">
+            <MudNumericField Value="@context.Quantity" Style="height: 30px; width:80px; padding: 5px; font-size: 14px;"
+                             Immediate="true" Variant="Variant.Outlined" Min="0"
+                             ValueChanged="@((int newValue) => UpdateOrderItem(context, newValue))" />
+        </MudTd>
+        <MudTd DataLabel="Total">@((context.Quantity * context.Cost).ToString("c"))</MudTd>
+        <MudTd>
+            <MudIconButton Icon="@Icons.Material.Filled.Delete" OnClick="@(() => RemoveItemFromOrder(context))" />
+        </MudTd>
+    </RowTemplate>
+</MudTable>
+
+<MudText Typo="Typo.h5" Class="mt-4"><b>Total Order Value: @CalculateTotal().ToString("c")</b></MudText>
+<br />
+@code {
+    public List<itemForSale> itemsForSale = [];
+    public List<itemForSale> itemsOnOrder = [];
+    private string addString = string.Empty;
+
+    protected override void OnInitialized()
+    {
+        itemsForSale = GetItems();
+    }
+
+    private List<itemForSale> GetItems()
+    {
+        return new List<itemForSale>
+        {
+            new itemForSale { Name = "Laptop", Description = "High-performance laptop", Cost = 999.99m, Quantity = 1 },
+            new itemForSale { Name = "Smartphone", Description = "Latest model smartphone", Cost = 699.99m, Quantity = 1 },
+            new itemForSale { Name = "Headphones", Description = "Noise-cancelling headphones", Cost = 199.99m, Quantity = 1 },
+            new itemForSale { Name = "Tablet", Description = "10-inch tablet", Cost = 349.99m, Quantity = 1 },
+            new itemForSale { Name = "Smartwatch", Description = "Fitness tracking smartwatch", Cost = 249.99m, Quantity = 1 },
+            new itemForSale { Name = "Camera", Description = "Digital SLR camera", Cost = 799.99m, Quantity = 1 },
+            new itemForSale { Name = "Printer", Description = "All-in-one printer", Cost = 179.99m, Quantity = 1 },
+            new itemForSale { Name = "External HDD", Description = "1TB external hard drive", Cost = 79.99m, Quantity = 1 },
+            new itemForSale { Name = "Gaming Console", Description = "Next-gen gaming console", Cost = 499.99m, Quantity = 1 },
+        };
+    }
+
+    private void AddItemToOrder(itemForSale item)
+    {
+        var existingItem = itemsOnOrder.FirstOrDefault(i => i.Name == item.Name);
+        if (existingItem != null)
+        {
+            existingItem.Quantity += item.Quantity;
+        }
+        else
+        {
+            itemsOnOrder.Add(new itemForSale
+                {
+                    Name = item.Name,
+                    Description = item.Description,
+                    Cost = item.Cost,
+                    Quantity = item.Quantity
+                });
+        }
+        addString = $"Added: {item.Quantity} x {item.Name}";
+        StateHasChanged();
+    }
+
+    private void UpdateOrderItem(itemForSale item, int newQuantity)
+    {
+        item.Quantity = newQuantity;
+        if (item.Quantity <= 0)
+        {
+            RemoveItemFromOrder(item);
+        }
+        addString = $"Updated: {item.Name} to quantity {newQuantity}";
+        StateHasChanged();
+    }
+
+    private void RemoveItemFromOrder(itemForSale item)
+    {
+        itemsOnOrder.Remove(item);
+        addString = $"Removed: {item.Name} from order";
+        StateHasChanged();
+    }
+
+    private decimal CalculateTotal()
+    {
+        return itemsOnOrder.Sum(item => item.Quantity * item.Cost);
+    }
+
+    public class itemForSale
+    {
+        public string Name { get; set; } = default!;
+        public string Description { get; set; } = default!;
+        public decimal Cost { get; set; }
+        public int Quantity { get; set; }
+    }
+}

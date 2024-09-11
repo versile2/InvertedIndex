@@ -1,0 +1,179 @@
+@implements IDisposable
+@inject INavigationRepository _navRepo
+
+<style>
+	.active {
+		color: var(--mud-palette-appbar-background) !important;
+	}
+</style>
+
+<MudHidden HiddenChanged="ScreenResized" />
+
+<MudDrawer @bind-Open="DrawerOpen" id="navBaseDrawer" ClipMode="DrawerClipMode.Docked" @onmouseover="OnMouseHover" @onmouseout="OnMouseOut"
+		   Elevation="2" OpenMiniOnHover="!DrawerOpen" Variant="@_variant">
+	<MudDrawerHeader Class="ml-0 mr-0 pl-2 pr-2">
+		<GraphContactCard HideName="@HideName" />
+	</MudDrawerHeader>
+	<MudNavMenu id="navBaseMenu">
+		@foreach (var nav in NavList!)
+		{
+			@RenderNavLink(nav)
+		}		
+	</MudNavMenu>
+	<MudSpacer />
+</MudDrawer>
+
+@code {
+    [Parameter]
+    public bool DrawerOpen { get; set; } = true;
+    private bool IsOnMouseOk { get; set; } = true;
+    private bool HideName { get; set; } = true;
+    private DrawerVariant _variant = DrawerVariant.Mini;
+
+    public List<Data_NavLink> NavList { get; set; } = [];
+
+    protected async override Task OnInitializedAsync()
+    {
+        // Query the database to retrieve the hierarchical navigation data
+        var navLinks = await _navRepo.GetNavigationMenuAsync();
+
+        // Get the current user's authentication state
+        //var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        //var user = authState?.User;
+
+        // Filter the navigation links based on the user's roles
+        NavList = GetSortedActiveTopLevelNavLinks(navLinks);
+
+        // Monitor Changes
+        _navRepo.NavigationChanged += OnNavLinkChanged;
+    }
+
+    public void Dispose()
+    {
+        _navRepo.NavigationChanged -= OnNavLinkChanged;
+    }
+
+    private void OnNavLinkChanged(object? sender, NavigationChangeEventArgs eventArgs)
+    {
+        switch (eventArgs.ChangeType)
+        {
+            case ChangeType.Added:
+                NavList.Add(eventArgs.NavLink);
+                break;
+            case ChangeType.Updated:
+                var existingNav = NavList.FirstOrDefault(x => x.NavLinkId == eventArgs.NavLink.NavLinkId);
+                if (existingNav != null) NavList[NavList.IndexOf(existingNav)] = eventArgs.NavLink;                
+                break;
+            case ChangeType.Deleted:
+                NavList.RemoveAll(x => x.NavLinkId == eventArgs.NavLink.NavLinkId);
+                break;            
+        }
+        NavList = GetSortedActiveTopLevelNavLinks(NavList);
+        StateHasChanged();
+    }
+
+    private List<Data_NavLink> GetSortedActiveTopLevelNavLinks(IEnumerable<Data_NavLink> navLinks)
+    {
+        return navLinks
+            .Where(n => n.IsActive)
+            .Where(m => !m.ParentId.HasValue)
+            .Where(nav =>
+            {
+                if (!string.IsNullOrEmpty(nav.Role))
+                {
+                    string[] roles = nav.Role.Split(',', StringSplitOptions.RemoveEmptyEntries)
+                                                .Select(r => r.Trim())
+                                                .ToArray();
+                    bool authorized = false;
+                    foreach (var role in roles)
+                    {
+                        if (true)  //  user!.IsInRole(role)
+                        {
+                            // If the user has at least 1 of the required roles, include the navigation link
+                            // for the sample we authorize every role
+                            authorized = true;
+                        }
+                    }
+                    return authorized;
+                }
+
+                return true;
+            })
+            .OrderBy(m => !m.ParentId.HasValue ? int.MaxValue : m.ParentId)
+            .ThenBy(m => m.OrderById)
+            .ToList();
+    }
+
+	protected override void OnParametersSet()
+	{
+		HideName = !DrawerOpen;
+		IsOnMouseOk = !DrawerOpen;
+	}
+
+	private void OnMouseHover()
+	{
+		if (IsOnMouseOk)
+		{
+			HideName = false;
+		}
+	}
+
+	private void OnMouseOut()
+	{
+		if (IsOnMouseOk)
+		{
+			HideName = true;
+		}
+	}
+
+	private void ScreenResized(bool hidden)
+	{
+		if (hidden)
+		{
+			_variant = DrawerVariant.Temporary;
+		}
+		else
+		{
+			_variant = DrawerVariant.Mini;
+		}
+	}
+
+	RenderFragment RenderNavLink(Data_NavLink nav)
+	{
+		return builder =>
+		{
+			if (nav.ChildNavLinks.Any())
+			{
+				builder.OpenComponent<MudNavGroup>(3);
+				builder.AddAttribute(4, "Title", nav.Title);
+				builder.AddAttribute(5, "Icon", nav.Icon);
+
+				builder.AddAttribute(6, "ChildContent", (RenderFragment)(childBuilder =>
+				{
+					foreach (var child in nav.ChildNavLinks)
+					{
+						childBuilder.AddContent(0, RenderNavLink(child));
+					}
+				}));
+
+				builder.CloseComponent();
+			}
+			else
+			{
+				builder.OpenComponent<MudNavLink>(2);
+				builder.AddAttribute(3, "Href", nav.Href);
+				builder.AddAttribute(4, "Icon", nav.Icon ?? string.Empty);
+				builder.AddAttribute(5, "Match", NavLinkMatch.All);
+				builder.AddAttribute(6, "Target", nav.IsNewWindow ? "_blank" : null);
+
+				builder.AddAttribute(7, "ChildContent", (RenderFragment)(innerBuilder =>
+				{
+					innerBuilder.AddContent(0, nav.Title);
+				}));
+
+				builder.CloseComponent();
+			}
+		};
+	}
+
+}

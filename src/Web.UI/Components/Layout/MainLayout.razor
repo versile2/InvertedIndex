@@ -1,0 +1,79 @@
+@inherits LayoutComponentBase
+@inject ILocalStorageService LocalStorage
+
+<MudThemeProvider @bind-IsDarkMode="@IsDarkMode" Theme="@CustomTheme.SilverTheme" />
+<MudDialogProvider BackdropClick="false" CloseOnEscapeKey="true" CloseButton="true" />
+<MudSnackbarProvider />
+<MudPopoverProvider />
+
+<MudLayout>
+	@if (DisplaySkeleton && !DoNotRenderForUnitTest)
+	{
+		<Loading />
+	}
+	else
+	{
+				<MudAppBar Elevation="4" Fixed="true" Dense="true">
+					<MudIconButton id="drawerButton" Color="Color.Inherit" Icon="@Icons.Material.Outlined.Menu" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" />
+					<MudText Style="font-weight: bold;" Class="ml-3">Demo Application</MudText>
+					<MudSpacer />
+					<MudIconButton id="darkToggle" OnClick="@(() => ToggleDark())"
+								   Icon="@(!IsDarkMode ? Icons.Material.Outlined.WbSunny : Icons.Material.Outlined.NightsStay)"
+								   Color="Color.Inherit" />
+					<MudIconButton id="logoutButton" Color="Color.Inherit" Icon="@Icons.Material.Outlined.Logout" Edge="Edge.End" Href="MicrosoftIdentity/Account/SignOut">Logout</MudIconButton>
+				</MudAppBar>
+		@if (!DoNotRenderForUnitTest)
+		{
+					<NavMenu DrawerOpen="@DrawerOpen"></NavMenu>
+					<MudMainContent Class="mt-12 pa-4">
+			<ErrorBoundary>
+				<ChildContent>
+					@Body
+				</ChildContent>
+				<ErrorContent Context="exception">
+					<Error Exception="exception" />
+				</ErrorContent>
+			</ErrorBoundary>
+			</MudMainContent>
+		}
+	}
+</MudLayout>
+    @code {
+    [Parameter] public bool DoNotRenderForUnitTest { get; set; } = false;
+
+    public bool DrawerOpen { get; set; }
+    public bool IsDarkMode { get; set; }
+    public bool DisplaySkeleton { get; set; }
+
+    protected override void OnInitialized()
+    {
+        DrawerOpen = true;
+        IsDarkMode = false;
+        DisplaySkeleton = true;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            var result = await LocalStorage.GetItemAsync<bool>("darkMode");
+            if (result.Success)
+            {
+                IsDarkMode = result.Value;
+            }
+            DisplaySkeleton = false;
+            StateHasChanged();
+        }
+    }
+
+	public async Task ToggleDark()
+	{
+		IsDarkMode = !IsDarkMode;
+		await LocalStorage.SetItemAsync("darkMode", IsDarkMode);
+	}
+
+	public void DrawerToggle()
+	{
+		DrawerOpen = !DrawerOpen;
+	}
+}

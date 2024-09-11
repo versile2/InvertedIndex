@@ -1,0 +1,66 @@
+@page "/"
+
+<PageTitle>Home</PageTitle>
+
+<MudText Typo="Typo.h3" GutterBottom="true">Hello, Mom!</MudText>
+<MudText Typo="Typo.subtitle1">Welcome to my app, powered by MudBlazor and .NET 8!</MudText>
+
+<MudList T="string">
+    <MudListItem>
+        The first showcase is hierarchical navigation links. I've included a SQLite DB implementation here but it would be trivial to switch to any other provider.
+    </MudListItem>
+    <MudListItem>
+        The second showcase is behind the scenes in wrapping the LocalBrowserStorage included in .NET with a wrapper so I can write successful unit tests.
+    </MudListItem>
+    <MudListItem>
+        The third showcase is a random project I thought would be fun, Data Structures - Inverted Index. If you want more information click the menu to the left, Return to GitHub Projects.
+        <MudPaper Elevation="4" Class="pa-3 mt-2">
+            <MudText Typo="Typo.h6">Data Structures - Inverted Index</MudText>
+            <MudText>
+                Inverted index - An
+                <MudLink Href="https://en.wikipedia.org/wiki/Inverted_index" Target="_blank" Typo="Typo.body2" Color="Color.Primary">
+                    <b>Inverted Index</b>
+                </MudLink>
+                is a data structure used to create full text search. Given a set of text files, implement a program to create an
+                inverted index. Also create a user interface to do a search using that inverted index which returns a list of files that contain the query term / terms.
+                The search index can be in memory.
+            </MudText>
+        </MudPaper>
+    </MudListItem>
+    <MudListItem>
+        The fourth showcase is Error Handling / Catching, in the event of an error I want the Error Page to be descriptive.
+        In debug mode show the full error, in production mode log it to the database.<br/>
+        <MudButton StartIcon="@Icons.Material.Rounded.Error" Variant="Variant.Filled" Color="Color.Error" Class="mt-2"
+            OnClick="@(() => { throw new Exception("Test Exception", new Exception("Test Inner Exception")); })">
+            Throw Test Exception
+        </MudButton>
+    </MudListItem>
+</MudList>
+
+<MudPaper Elevation="4" Class="pa-3 mt-6">
+    <MudText Typo="Typo.h6">MudBlazor</MudText>
+    <MudText>
+        MudBlazor is the component library you've always wanted; A collection of open source components with outstanding support on both Discord and GitHub.
+        It offers a wide range of components, templates, themes, and even components you haven't thought of through Extensions.
+        You can explore more in the documentation and examples on their website:
+        <MudLink Href="https://mudblazor.com" Target="_blank" Typo="Typo.body2" Color="Color.Primary">
+            <b>www.mudblazor.com</b>
+        </MudLink>.
+    </MudText>
+    <MudText Class="pt-5" Typo="Typo.subtitle1">Check out the GitHub repository:</MudText>
+    <MudLink Href="https://github.com/MudBlazor/MudBlazor/" Target="_blank" Typo="Typo.body2" Color="Color.Primary">
+        <b>MudBlazor on GitHub</b>
+    </MudLink>
+    <MudText Typo="Typo.subtitle1">Join the community on Discord:</MudText>
+    <MudLink Href="https://discord.gg/mudblazor" Target="_blank" Typo="Typo.body2" Color="Color.Primary">
+        <b>Discord Server</b>
+    </MudLink>
+    <MudText Typo="Typo.subtitle1">Discover more with MudExtensions:</MudText>
+    <MudLink Href="https://mudex.org" Target="_blank" Typo="Typo.body2" Color="Color.Primary">
+        <b>MudExtensions</b>
+    </MudLink>
+    <MudText Typo="Typo.subtitle1">Even more with Codebeam.MudExtensions</MudText>
+    <MudLink Href="https://codebeam-mudextensions.pages.dev/" Target="_blank" Typo="Typo.body2" Color="Color.Primary">
+        <b>Codebeam.MudExtensions</b>
+    </MudLink>
+</MudPaper>

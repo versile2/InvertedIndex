@@ -1,0 +1,37 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Web.UI", "Web.UI\Web.UI.csproj", "{51D13AE4-D814-4BAE-AADE-4BE36F84F1FA}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Web.DAL", "Web.DAL\Web.DAL.csproj", "{00C47EA8-4D9F-45AF-AC46-5385DBFB3FC6}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Web.Tests", "..\tests\Web.Tests\Web.Tests.csproj", "{924CF1DE-40E5-4D67-99EE-D73E0F9F45E0}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{51D13AE4-D814-4BAE-AADE-4BE36F84F1FA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{51D13AE4-D814-4BAE-AADE-4BE36F84F1FA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{51D13AE4-D814-4BAE-AADE-4BE36F84F1FA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{51D13AE4-D814-4BAE-AADE-4BE36F84F1FA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{00C47EA8-4D9F-45AF-AC46-5385DBFB3FC6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{00C47EA8-4D9F-45AF-AC46-5385DBFB3FC6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{00C47EA8-4D9F-45AF-AC46-5385DBFB3FC6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{00C47EA8-4D9F-45AF-AC46-5385DBFB3FC6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{924CF1DE-40E5-4D67-99EE-D73E0F9F45E0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{924CF1DE-40E5-4D67-99EE-D73E0F9F45E0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{924CF1DE-40E5-4D67-99EE-D73E0F9F45E0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{924CF1DE-40E5-4D67-99EE-D73E0F9F45E0}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {8B112F32-24FE-4005-91FB-B4937609FA2B}
+	EndGlobalSection
+EndGlobal
