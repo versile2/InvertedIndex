@@ -7,7 +7,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Web.UI", "Web.UI\Web.UI.csp
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Web.DAL", "Web.DAL\Web.DAL.csproj", "{00C47EA8-4D9F-45AF-AC46-5385DBFB3FC6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Web.Tests", "..\tests\Web.Tests\Web.Tests.csproj", "{924CF1DE-40E5-4D67-99EE-D73E0F9F45E0}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Web.Tests", "..\tests\Web.Tests\Web.Tests.csproj", "{924CF1DE-40E5-4D67-99EE-D73E0F9F45E0}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

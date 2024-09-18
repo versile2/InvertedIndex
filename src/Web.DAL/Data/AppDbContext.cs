@@ -3,12 +3,35 @@ using Web.DAL.Models;
 
 namespace Web.DAL.Data
 {
-    public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(options)
+    public class AppDbContext : DbContext
     {
+        public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
+        {
+            if (Database.ProviderName == "Microsoft.EntityFrameworkCore.InMemory")
+            {
+                SeedInMemoryDatabase();
+            }
+        }
         public void Initialize()
         {
             this.Database.Migrate();
         }
+        private void SeedInMemoryDatabase()
+        {
+            var navSeed = SeedData.GetNavigations();
+            var errSeed = SeedData.GetErrorStatuses();
+            foreach (var nav in navSeed)
+            {
+                nav.NavLinkId = 0;
+            }
+            foreach (var err in errSeed)
+            {
+                err.ErrorStatusId = 0;
+            }
+            Data_NavLinks.AddRange(navSeed);
+            ErrorStatus.AddRange(errSeed);
+        }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);

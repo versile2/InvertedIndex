@@ -38,7 +38,7 @@
 		}
 	}
 </MudLayout>
-    @code {
+@code {
     [Parameter] public bool DoNotRenderForUnitTest { get; set; } = false;
 
     public bool DrawerOpen { get; set; }
@@ -57,9 +57,9 @@
         if (firstRender)
         {
             var result = await LocalStorage.GetItemAsync<bool>("darkMode");
-            if (result.Success)
+            if (result)
             {
-                IsDarkMode = result.Value;
+                IsDarkMode = result;
             }
             DisplaySkeleton = false;
             StateHasChanged();

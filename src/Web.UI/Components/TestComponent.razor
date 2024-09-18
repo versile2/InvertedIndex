@@ -1,0 +1,53 @@
+<MudTextField T="string" @ref="refUserInputField"
+              Value="strInput"
+              ValueChanged="StringChanged"
+              Label="Gen Name"
+              Variant="Variant.Outlined"
+              Immediate="true"
+              Clearable="true"
+              Placeholder="Search beings after entering 3+ characters" />
+
+@code {
+    [Parameter] public string? defText { get; set; }
+    [Parameter] public EventCallback<string> defTextChanged { get; set; }
+
+    [Parameter] public string? defId { get; set; }
+    [Parameter] public EventCallback<string> defIdChanged { get; set; }
+
+    private string strInput = string.Empty;
+    MudTextField<string> refUserInputField = default!;
+
+    protected override void OnParametersSet()
+    {
+        strInput = defText ?? string.Empty;
+    }
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (firstRender)
+        {
+            defId = refUserInputField.InputReference.FieldId;
+            if (defIdChanged.HasDelegate)
+            {
+                defIdChanged.InvokeAsync(defId);
+            }
+        }
+        base.OnAfterRender(firstRender);
+    }
+
+    private async Task StringChanged(string newValue)
+    {
+        defText = newValue;
+        strInput = newValue;
+
+        if (defTextChanged.HasDelegate)
+        {
+            await defTextChanged.InvokeAsync(newValue);
+        }
+    }
+
+    public async Task FocusTextField()
+    {
+        await refUserInputField.FocusAsync();
+    }
+}

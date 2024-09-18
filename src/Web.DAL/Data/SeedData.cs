@@ -29,47 +29,47 @@ namespace Web.DAL.Data
 
 				// Projects Page
 						new() {
-                            NavLinkId = 4,
+                            NavLinkId = 3,
                             Title = "Return to GitHub",
                             Icon = Icons.Material.Filled.KeyboardReturn,
                             OrderById = 99,
                 },
                         new() {
-                            NavLinkId = 5,
+                            NavLinkId = 4,
                             Title = "Mega Project List",
                             Href = "https://github.com/karan/Projects",
                             IsNewWindow = true,
                             OrderById = 0,
-                            ParentId = 4
+                            ParentId = 3
                 },
                         new() {
-                            NavLinkId = 6,
+                            NavLinkId = 5,
                             Title = "Mega Solution List",
                             Href = "https://github.com/karan/Projects-Solutions",
                             IsNewWindow = true,
                             OrderById = 1,
-                            ParentId = 4
+                            ParentId = 3
                 },
                 // Admin
                         new() {
-                            NavLinkId = 7,
+                            NavLinkId = 6,
                             Title = "Admin",
                             Role = "adminrole",
                             Icon = Icons.Material.Filled.AdminPanelSettings,
                             OrderById = 98,
                 },
                         new() {
-                            NavLinkId= 8,
+                            NavLinkId= 7,
                             Title = "Navigation",
                             Href = "managenav",
                             Role = "adminrole",
                             OrderById = 0,
-                            ParentId = 7,
+                            ParentId = 6,
                 },
                 // Document Upload
                         new()
                         {
-                            NavLinkId = 3,
+                            NavLinkId = 8,
                             Title = "Upload Documents",
                             ParentId = 2,
                             Href="docupload",
@@ -104,8 +104,8 @@ namespace Web.DAL.Data
                 },
             };
             // Generate 10 levels of hierarchy
-            int currentId = 32;
-            int parentId = 31;
+            int currentId = 12;
+            int parentId = 11;
 
             for (int i = 1; i <= 10; i++)
             {
@@ -114,7 +114,7 @@ namespace Web.DAL.Data
                     NavLinkId = currentId,
                     Icon = i == 1 ? Icons.Material.Filled.FormatListNumbered : null,
                     Title = i == 1 ? "Hierarchy Nav" : $"Level {i - 1}",
-                    ParentId = parentId == 31 ? null : parentId,
+                    ParentId = parentId == 11 ? null : parentId,
                     OrderById = i == 1 ? 97 : i - 1,
                 };
 
