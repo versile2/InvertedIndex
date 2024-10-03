@@ -1,53 +1,59 @@
-<MudTextField T="string" @ref="refUserInputField"
-              Value="strInput"
-              ValueChanged="StringChanged"
-              Label="Gen Name"
-              Variant="Variant.Outlined"
-              Immediate="true"
-              Clearable="true"
-              Placeholder="Search beings after entering 3+ characters" />
+<MudExpansionPanel HideIcon @bind-Expanded="@Expanded" >
+    <TitleContent>@(TitleContent)</TitleContent>
+    <ChildContent>
+        @(ChildContent)
+        @loadedContent
+    </ChildContent>
+</MudExpansionPanel>
 
 @code {
-    [Parameter] public string? defText { get; set; }
-    [Parameter] public EventCallback<string> defTextChanged { get; set; }
 
-    [Parameter] public string? defId { get; set; }
-    [Parameter] public EventCallback<string> defIdChanged { get; set; }
+    [Parameter, EditorRequired]
+    public required RenderFragment ChildContent { get; set; } = null!;
 
-    private string strInput = string.Empty;
-    MudTextField<string> refUserInputField = default!;
+    [Parameter]
+    public RenderFragment TitleContent { get; set; }
 
-    protected override void OnParametersSet()
+    [Parameter]
+    public bool Expanded { get; set; }
+
+    [Parameter]
+    public EventCallback<bool> ExpandedChanged { get; set; }
+
+    [Parameter]
+    public bool InitiallyExpanded { get; set; }
+
+    private bool _beenExpanded;
+
+    private string loadedContent = string.Empty;    
+
+    private async Task LoadContent()
     {
-        strInput = defText ?? string.Empty;
+        loadedContent = "Loading...";
+        StateHasChanged();
+        await Task.Delay(1000);
+        loadedContent = "Content Loaded";
+        _beenExpanded = true;
+        StateHasChanged();
     }
-
-    protected override void OnAfterRender(bool firstRender)
+    /// <inheritdoc />
+    protected async override Task OnInitializedAsync()
     {
-        if (firstRender)
+        // init expanded-state
+        Expanded = InitiallyExpanded;
+        if (!_beenExpanded && Expanded)
         {
-            defId = refUserInputField.InputReference.FieldId;
-            if (defIdChanged.HasDelegate)
-            {
-                defIdChanged.InvokeAsync(defId);
-            }
+            await LoadContent();
         }
-        base.OnAfterRender(firstRender);
+        // base handling
+        base.OnInitialized();
     }
 
-    private async Task StringChanged(string newValue)
+    protected async override Task OnAfterRenderAsync(bool firstRender)
     {
-        defText = newValue;
-        strInput = newValue;
-
-        if (defTextChanged.HasDelegate)
+        if (!_beenExpanded && Expanded)
         {
-            await defTextChanged.InvokeAsync(newValue);
+            await LoadContent();
         }
-    }
-
-    public async Task FocusTextField()
-    {
-        await refUserInputField.FocusAsync();
     }
 }

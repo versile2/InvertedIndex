@@ -12,7 +12,7 @@
     </ItemGroup>    
     
     <ItemGroup>
-      <PackageReference Include="EficazFramework.Data.SqlLite" Version="6.2.4" />
+      <PackageReference Include="EficazFramework.Data.SqlLite" Version="6.2.5" />
       <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.8">
         <PrivateAssets>all</PrivateAssets>
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -21,8 +21,8 @@
         <PrivateAssets>all</PrivateAssets>
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       </PackageReference>
-      <PackageReference Include="MudBlazor" Version="7.6.0" />
-      <PackageReference Include="MudBlazor.Extensions" Version="2.0.3" />
+      <PackageReference Include="MudBlazor" Version="7.8.0" />
+      <PackageReference Include="MudBlazor.Extensions" Version="2.0.5" />
       <PackageReference Include="Serilog.AspNetCore" Version="8.0.2" />
       <PackageReference Include="Serilog.Sinks.Console" Version="6.0.0" />
       <PackageReference Include="Serilog.Sinks.SQLite" Version="6.0.0" />

@@ -1,150 +1,35 @@
-@page "/testpage"
+@page "/MudTry"
 
-<MudText Typo="Typo.subtitle2">Selected: @(_selectedComment?.Content ?? "N/A")</MudText>
-<br/>
-<MudTreeView T="Comment" Items="TreeViewItems" ServerData="@LoadServerData" ExpandOnClick="true" @bind-SelectedValue="_selectedComment">
-    <ItemTemplate>
-        <MudTreeViewItem Text="@context.Text" Value="context.Value" 
-            ExpandButtonIcon="@(context.Value!.HasChild ? Icons.Material.Filled.KeyboardArrowRight : string.Empty)" />
-    </ItemTemplate>
-</MudTreeView>
+<MudDropContainer T="DropItem" Items=@_items
+                  ItemsSelector=@((item, zone) => item.Zone == DropzoneId)
+                  ItemDropped=@ItemDropped>
 
-<TestComponent @ref="testFocusComponent" @bind-defText="defText" @bind-defId="defId" />
-<MudText>Text: @defText <br/> Id: @defId</MudText>
-<MudButton Variant="Variant.Filled" OnClick="@(async () => await testFocusComponent?.FocusTextField())">Focus Input</MudButton>
-@code {
-    private string defText = "This is a test.";
-    private string defId = string.Empty;
-    private List<Comment> Comments = new();
-    private IReadOnlyCollection<TreeItemData<Comment>> TreeViewItems = Array.Empty<TreeItemData<Comment>>();
-    private Comment? _selectedComment;
-    private TestComponent testFocusComponent;
+    <ChildContent>
+        <MudList T="string">
+            <MudDropZone T="DropItem" Identifier=@DropzoneId AllowReorder />
+        </MudList>
+    </ChildContent>
 
-    protected override async Task OnInitializedAsync()
-    {
-        await Task.CompletedTask;
-        // get a set of comments to work on
-        Comments = CommentGenerator.GenerateComments();
-        // only load top level comments like the api lets us
-        TreeViewItems = Comments.Where(c => c.ParentId == null).Select(c => new TreeItemData<Comment>()
-            {
-                Expandable = c.HasChild,
-                Expanded = false,
-                Text = c.Content,
-                Value = c,
-            }).ToList();
-    }
+    <ItemRenderer>
+        <MudListItem T="string" Text=@context.Name />
+    </ItemRenderer>
 
-    private async Task<IReadOnlyCollection<TreeItemData<Comment>>> LoadServerData(Comment parentValue)
-    {
-        await Task.CompletedTask;
-        _selectedComment = parentValue;
-        StateHasChanged();
-        // grab the children of the parent clicked if we don't have them loaded yet
-        if (parentValue.HasChild && !parentValue.ChildrenLoaded)
-        {
-            var childComments = Comments
-                                .Where(c => c.ParentId == parentValue.Id)
-                                .ToList();
-
-            var treeItems = childComments.Select(c => new TreeItemData<Comment>()
-                {
-                    Expandable = c.HasChild,
-                    Text = c.Content,
-                    Value = c,
-                }).ToList();
-
-            // Mark the parent as having loaded its children
-            parentValue.ChildrenLoaded = true;
-
-            return treeItems;
-        }
-
-        return [];
-    }
-}
-
+</MudDropContainer>
 
 @code {
-    public class Comment // viewmodel class we'll use to load in comments from the api
+    public record DropItem(string Name, string Zone);
+
+    private const string DropzoneId = "groupzone";
+
+    private void ItemDropped(MudItemDropInfo<DropItem> item)
     {
-        public string Id { get; set; }
-        public string Content { get; set; }
-        public string ParentId { get; set; }
-        public bool HasChild { get; set; }
-        public bool IsExpanded { get; set; }
-        public bool ChildrenLoaded { get; set; }
+        var result = item.Item with { Zone = item.DropzoneIdentifier };
     }
 
-    public class CommentGenerator
-    {
-        public static List<Comment> GenerateComments()
-        {
-            var comments = new List<Comment>();
-
-            // Generate 4 top-level comments (no children)
-            for (int i = 0; i < 4; i++)
-            {
-                comments.Add(new Comment
-                    {
-                        Id = Guid.NewGuid().ToString(),
-                        Content = $"Top-level comment {i + 1}",
-                        ParentId = null,
-                        HasChild = false // No child
-                    });
-            }
-
-            // Generate 6 top-level comments each with one child
-            for (int i = 0; i < 6; i++)
-            {
-                var parentComment = new Comment
-                    {
-                        Id = Guid.NewGuid().ToString(),
-                        Content = $"Parent comment {i + 1}",
-                        ParentId = null,
-                        HasChild = true // Has one child
-                    };
-                comments.Add(parentComment);
-
-                var childComment = new Comment
-                    {
-                        Id = Guid.NewGuid().ToString(),
-                        Content = $"Child of parent comment {i + 1}",
-                        ParentId = parentComment.Id, // Link to parent comment
-                        HasChild = false // No further child
-                    };
-                comments.Add(childComment);
-            }
-
-            // Generate 1 top-level comment with a nested comment chain 5 levels deep
-            var nestedParent = new Comment
-                {
-                    Id = Guid.NewGuid().ToString(),
-                    Content = "Top-level nested parent",
-                    ParentId = null,
-                    HasChild = true // Will have nested children
-                };
-            comments.Add(nestedParent);
-
-            // Now create a 5-level deep chain of comments
-            string currentParentId = nestedParent.Id;
-            for (int level = 1; level <= 5; level++)
-            {
-                var childComment = new Comment
-                    {
-                        Id = Guid.NewGuid().ToString(),
-                        Content = $"Nested child level {level}",
-                        ParentId = currentParentId, // Link to the previous level
-                        HasChild = (level < 5) // Only the last one has no child
-                    };
-                comments.Add(childComment);
-
-                // Set the current parentId to this child's ID for the next level
-                currentParentId = childComment.Id;
-            }
-
-            return comments;
-        }
-    }
-
+    private List<DropItem> _items = new() {
+        new DropItem("Option 1", DropzoneId),
+        new DropItem("Option 2", DropzoneId),
+        new DropItem("Option 3", DropzoneId),
+        new DropItem("Option 4", DropzoneId),
+    };
 }
