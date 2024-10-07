@@ -1,35 +1,138 @@
 @page "/MudTry"
+@using System.Linq.Expressions
 
-<MudDropContainer T="DropItem" Items=@_items
-                  ItemsSelector=@((item, zone) => item.Zone == DropzoneId)
-                  ItemDropped=@ItemDropped>
+<PageTitle>MUD Data Grid</PageTitle>
 
-    <ChildContent>
-        <MudList T="string">
-            <MudDropZone T="DropItem" Identifier=@DropzoneId AllowReorder />
-        </MudList>
-    </ChildContent>
 
-    <ItemRenderer>
-        <MudListItem T="string" Text=@context.Name />
-    </ItemRenderer>
+<MudDataGrid @ref="refMudDataGrid"
+             T="ModtblGenerator"
+             FixedHeader="true"
+             FixedFooter="true"
+             Filterable="true"
+             FilterCaseSensitivity="DataGridFilterCaseSensitivity.CaseInsensitive"
+             FilterMode="DataGridFilterMode.ColumnFilterMenu"
+             RowsPerPage="10"
+             ServerData="@LoadServerData"
+             Height="auto">
 
-</MudDropContainer>
+    <ToolBarContent>
+        <MudText Typo="Typo.h6" Align="Align.Center">
+            Record Count: @strRecordsCount
+        </MudText>
+        <MudSpacer />
+        <MudButtonGroup Color="Color.Info" Variant="Variant.Filled">
+            <MudButton>Export CSV</MudButton>
+            <MudButton>Export Excel</MudButton>
+        </MudButtonGroup>
+    </ToolBarContent>
+    <FilterTemplate>
+
+    </FilterTemplate>
+    <Columns>
+        <PropertyColumn Property="x => x.GenNum" Title="Gen Number" HeaderClass="header" StickyLeft="true" />
+        <PropertyColumn Property="x => x.GenName" Title="Gen Name" HeaderClass="header" />
+        <PropertyColumn Property="x => x.Street" Title="Street" HeaderClass="header" />
+        <PropertyColumn Property="x => x.City" Title="City" HeaderClass="header" />
+        <PropertyColumn Property="x => x.Province" Title="Province" HeaderClass="header" />
+        <PropertyColumn Property="x => x.Country" Title="Country" HeaderClass="header" />
+        <PropertyColumn Property="x => x.PostalCode" Title="PostalCode" HeaderClass="header" />
+        <PropertyColumn Property="x => x.WasteClasses" Title="Waste Classes" CellClass="wasteClasses" HeaderClass="header">
+            <CellTemplate>
+                <MudIcon Icon="@Icons.Material.Filled.Search" Size="Size.Small" Color="Color.Primary" />
+                @context.Item.WasteClasses
+            </CellTemplate>
+        </PropertyColumn>
+    </Columns>
+    <PagerContent>
+        @if (false)
+        {
+            <MudText>@strRecordsCount</MudText>
+        }
+        <MudDataGridPager T="ModtblGenerator" PageSizeOptions="new int[] { 10, 25, 50, 100}" />
+    </PagerContent>
+</MudDataGrid>
+
 
 @code {
-    public record DropItem(string Name, string Zone);
+    private List<ModtblGenerator> efAPI = [];
+    private MudDataGrid<ModtblGenerator>? refMudDataGrid;
+    private string strRecordsCount => "" + @refMudDataGrid?.GetFilteredItemsCount().ToString("N0") ?? "000";
 
-    private const string DropzoneId = "groupzone";
+    private int currentPage = 1;
 
-    private void ItemDropped(MudItemDropInfo<DropItem> item)
+    protected override void OnInitialized()
     {
-        var result = item.Item with { Zone = item.DropzoneIdentifier };
+        // Create 20 fictional records
+        efAPI = Enumerable.Range(1, 100).Select(i => new ModtblGenerator
+            {
+                GenNum = i,
+                GenName = $"Generator {i}",
+                Street = $"Street {i}",
+                City = $"City {i}",
+                Province = "Province",
+                Country = "Country",
+                PostalCode = $"P{i:0000}",
+                WasteClasses = $"Class {i % 5 + 1}"
+            }).ToList();
     }
 
-    private List<DropItem> _items = new() {
-        new DropItem("Option 1", DropzoneId),
-        new DropItem("Option 2", DropzoneId),
-        new DropItem("Option 3", DropzoneId),
-        new DropItem("Option 4", DropzoneId),
-    };
+    private async Task<GridData<ModtblGenerator>> LoadServerData(GridState<ModtblGenerator> state)
+    {
+        // this ensures it doesn't execute until the query is built and you call ToList/Count etc
+        var query = efAPI.AsQueryable(); 
+        
+        // Apply filtering
+        if (state.FilterDefinitions.Any())
+        {
+            query = query.Where(state.FilterDefinitions.ToArray()).AsQueryable();
+        }
+
+        // Apply sorting
+        if (state.SortDefinitions.Any())
+        {
+            query = query.OrderBy(state.SortDefinitions.ToArray()).AsQueryable();
+        }
+
+        // Apply paging
+        var totalItems = query.Count();
+        query = query.Skip(state.Page * state.PageSize).Take(state.PageSize);
+
+        var items = query.ToList();
+        return new GridData<ModtblGenerator>
+            {
+                Items = items,
+                TotalItems = totalItems
+            };
+    }
 }
+
+@code {
+    public class ModtblGenerator
+    {
+        public int GenNum { get; set; }
+        public string GenName { get; set; }
+        public string Street { get; set; }
+        public string City { get; set; }
+        public string Province { get; set; }
+        public string Country { get; set; }
+        public string PostalCode { get; set; }
+        public string WasteClasses { get; set; }
+    }
+}
+
+<style>
+    .header {
+        top: 0;
+        z-index: 1;
+        color: white !important;
+        font-size: small;
+        background-color: rgb(89, 74, 226) !important; /* MudBlazor Blue */
+    }
+
+    .wasteClasses {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        max-width: 200px;
+    }
+</style>
