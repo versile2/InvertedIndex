@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using MudBlazor.Extensions;
+using MudBlazor.Services;
 using Serilog;
 using Serilog.Events;
 using Web.DAL.Data;
@@ -26,13 +27,15 @@ builder.Host.UseSerilog((context, services, configuration) => configuration
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
-builder.Services.AddMudServicesWithExtensions(config =>
+builder.Services.AddMudServices(config =>
 {
     config.SnackbarConfiguration.PositionClass = MudBlazor.Defaults.Classes.Position.TopRight;
     config.SnackbarConfiguration.VisibleStateDuration = 5000;
     config.SnackbarConfiguration.PreventDuplicates = false;
     config.SnackbarConfiguration.HideTransitionDuration = 0;
 });
+
+builder.Services.AddMudExtensions();
 
 builder.Services.AddScoped<ILocalStorageService, LocalStorageService>();
 builder.Services.AddDbContextFactory<AppDbContext>(cfg => cfg.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
@@ -46,8 +49,6 @@ builder.Services.AddSingleton<IIndexService>(sp => sp.GetRequiredService<IndexSe
 builder.Services.AddHostedService(sp => sp.GetRequiredService<IndexService>());
 
 var app = builder.Build();
-
-app.UseMudExtensions();
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())

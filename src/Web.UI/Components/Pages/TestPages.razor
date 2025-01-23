@@ -1,227 +1,26 @@
 @page "/MudTry"
 
-<MudContainer Class="pt-8">
-    <MudGrid>
-        <MudItem xs=12>
-            <MudAutocomplete @ref="@refMA" T="Address" Label="Search for Address (AutoComplete)"
-            ShowProgressIndicator="true" ProgressIndicatorColor="Color.Tertiary" ListItemClass="hide-item"
-            @bind-Value="AddressSearch" SearchFunc="Search" ToStringFunc="@(e=> e==null?null : $"{e.address}")"
-            ResetValueOnEmptyText="true" CoerceText="true" CoerceValue="true"
-            Variant="Variant.Outlined" Clearable>
-                <BeforeItemsTemplate>
-                    @foreach (var e in searchedAddresses)
-                    {
-                        <MudListItem T="Address" Value="@e" OnClick="@(async () => await ListItemOnClickAsync(e))" OnClickPreventDefault="true" Class="@GetListItemClassname(e.Equals(AddressSearch))">
-                            <MudStack AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Row>
-                                <MudText>@e.address</MudText>
-                                @if (e.entries > 1)
-                                {
-                                    <MudButton Color="Color.Tertiary" Variant="Variant.Text" EndIcon="@Icons.Material.Filled.ArrowForward">
-                                        @($"+{e.entries} Entries")
-                                    </MudButton>
-                                }
-                            </MudStack>
-                            <!-- Logic here to only show linked subAddresses -->
-                            @if (e.entries > 1)
-                            {
-                                <SubAddress Parent="@this" AddressSelection="@e" />                              
-                            }
-                        </MudListItem>
-                    }
-                </BeforeItemsTemplate>
-                <ItemTemplate>
-                </ItemTemplate>
-            </MudAutocomplete>
-        </MudItem>
-    </MudGrid>
-</MudContainer>
-
-<style>
-    .hide-item {
-    display: none;
-    visibility: collapse;
-    }
-</style>
+<MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="ButtonOnClick">Click</MudButton>
 
 @code {
-    public MudAutocomplete<Address> refMA { get; set; } = default!;
-    public Address AddressSearch { get; set; } = default!;
-    private List<Address> searchedAddresses { get; set; } = [];
-    public List<Address> subAddresses { get; set; } = [];
-    private string searchValue = string.Empty;
+    [Inject]
+    public required IDialogService dialogService { get; set; }
 
-    private async Task<IEnumerable<Address>> Search(string value, System.Threading.CancellationToken token)
+    async Task ButtonOnClick()
     {
-        searchValue = value;
-        // if text is null or empty, show empty list
-        if (string.IsNullOrEmpty(value)) return new List<Address>();
+        DialogParameters parameters = new DialogParameters<TestComponent>
+            {
+                { x => x.Hello, "World" }
+            };
 
-        // simulate loading
-        await Task.Delay(1000);
+        DialogOptions options = new DialogOptions
+            {
+                CloseOnEscapeKey = true,
+                FullWidth = true,
+                MaxWidth = MaxWidth.Large,
+                Position = DialogPosition.TopCenter
+            };
 
-        // actual search logic here
-        searchedAddresses = GetAddresses.Where(a => (
-                    a.street_line.Contains(searchValue, StringComparison.OrdinalIgnoreCase) ||
-                    a.city.Contains(searchValue, StringComparison.OrdinalIgnoreCase) ||
-                    a.state.Contains(searchValue, StringComparison.OrdinalIgnoreCase) ||
-                    a.zipcode.Contains(searchValue, StringComparison.OrdinalIgnoreCase)
-                )).ToList();
-
-        if (AddressSearch?.entries > 1)
-        {
-            subAddresses = AptAddresses.Where(a => (
-                    a.street_line.Contains(AddressSearch?.street_line ?? "!!!") ||
-                    a.street_line.Contains(searchValue, StringComparison.OrdinalIgnoreCase) ||
-                    a.city.Contains(searchValue, StringComparison.OrdinalIgnoreCase) ||
-                    a.state.Contains(searchValue, StringComparison.OrdinalIgnoreCase) ||
-                    a.zipcode.Contains(searchValue, StringComparison.OrdinalIgnoreCase)
-                )).ToList();
-        }
-        return searchedAddresses;
+        await dialogService.ShowAsync<TestComponent>("TestDialog", parameters, options);
     }
-
-    public async Task ListItemOnClickAsync(Address item)
-    {
-        if (item == AddressSearch) return;
-        AddressSearch = item;
-        // they clicked an item with no extra entries (1 or 0 or null)
-        if ((AddressSearch?.entries ?? 0) < 2)
-        {
-            searchedAddresses = [];
-            subAddresses = [];
-            await refMA.SelectOptionAsync(AddressSearch);
-        }
-        else
-        {
-            await refMA.OpenMenuAsync(); // trigger search
-            // will need some logic to handle the link, simple example just shows subaddresses for all searched addresses with more than one entry
-        }        
-    }
-
-    public string GetListItemClassname(bool isSelected)
-    {
-        var classes = isSelected ? "mud-selected-item mud-primary-text mud-primary-hover" : string.Empty;
-        return classes;
-    }
-
-    // Keep Dropdown Menu Open if Address has Multiple Entries
-    private async void HandleOpenChanged(bool isOpen)
-    {
-        // If Dropdown menu is closed and the selected address has multiple entires, open the menu
-        Console.WriteLine($"1Entries: {(AddressSearch?.entries ?? 0)}");
-        if (!isOpen && (AddressSearch?.entries ?? 0) > 1)
-        {
-            await refMA.ToggleMenuAsync();
-            Console.WriteLine($"2Entries: {(AddressSearch?.entries ?? 0)}");
-        }
-    }
-
-    private List<Address> GetAddresses { get; set; } = new List<Address>() {
-        new Address() {
-            street_line = "777 Brockton Avenue",
-            secondary = String.Empty,
-            city = "Abington",
-            state = "MA",
-            zipcode = "02351",
-            entries = 3
-        },
-        new Address() {
-            street_line = "30 Memorial Drive",
-            secondary = String.Empty,
-            city = "Avon",
-            state = "MA",
-            zipcode = "02322"
-        },
-        new Address() {
-            street_line = "250 Hartford Avenue",
-            secondary = String.Empty,
-            city = "Bellingham",
-            state = "MA",
-            zipcode = "02019"
-        },
-        new Address() {
-            street_line = "700 Oak Street",
-            secondary = String.Empty,
-            city = "Brockton",
-            state = "MA",
-            zipcode = "02301"
-        },
-        new Address() {
-            street_line = "66-4 Parkhurst Rd",
-            secondary = String.Empty,
-            city = "Chelmsford",
-            state = "MA",
-            zipcode = "01824"
-        },
-        new Address() {
-            street_line = "591 Memorial Dr",
-            secondary = String.Empty,
-            city = "Chicopee",
-            state = "MA",
-            zipcode = "01020"
-        },
-        new Address() {
-            street_line = "55 Brooksby Village Way",
-            secondary = String.Empty,
-            city = "Danvers",
-            state = "MA",
-            zipcode = "01923"
-        },
-        new Address() {
-            street_line = "137 Teaticket Hwy",
-            secondary = String.Empty,
-            city = "East Falmouth",
-            state = "MA",
-            zipcode = "02536"
-        },
-        new Address() {
-            street_line = "42 Fairhaven Commons Way",
-            secondary = String.Empty,
-            city = "Fairhaven",
-            state = "MA",
-            zipcode = "02719"
-        },
-        new Address() {
-            street_line = "374 William S Canning Blvd",
-            secondary = String.Empty,
-            city = "Fall River",
-            state = "MA",
-            zipcode = "02721"
-        },
-        new Address() {
-            street_line = "121 Worcester Rd",
-            secondary = String.Empty,
-            city = "Framingham",
-            state = "MA",
-            zipcode = "01701"
-        },
-        // ... and so on for the rest of the list
-    };
-
-    private List<Address> AptAddresses { get; set; } = new List<Address>() {
-        new Address() {
-            street_line = "777 Brockton Avenue",
-            secondary = "Apt 1",
-            city = "Abington",
-            state = "MA",
-            zipcode = "02351",
-            entries = 1
-        },
-        new Address() {
-            street_line = "777 Brockton Avenue",
-            secondary = "Apt 2",
-            city = "Abington",
-            state = "MA",
-            zipcode = "02351",
-            entries = 1
-        },
-        new Address() {
-            street_line = "777 Brockton Avenue",
-            secondary = "Apt 3",
-            city = "Abington",
-            state = "MA",
-            zipcode = "02351",
-            entries = 1
-        },
-    };
 }

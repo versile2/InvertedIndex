@@ -55,17 +55,17 @@ namespace Web.UI.Data
             },
             Typography = new Typography
             {
-                Default = new Default
+                Default = new DefaultTypography
                 {
-                    FontWeight = 400,
-                    LineHeight = 1.4285714287,
+                    FontWeight = "400",
+                    LineHeight = "1.4285714287",
                     FontFamily = ["Source Sans Pro", "Helvetica Neue", "Arial", "sans-serif"]
                 },
-                Body1 = new Body1
+                Body1 = new Body1Typography
                 {
                     FontSize = "14px"
                 },
-                Body2 = new Body2
+                Body2 = new Body2Typography
                 {
                     FontSize = "12px"
                 }
@@ -213,124 +213,116 @@ namespace Web.UI.Data
             },
             Typography = new Typography()
             {
-                Default = new Default
+                Default = new DefaultTypography
                 {
                     FontFamily = ["Roboto", "Helvetica", "Arial", "sans-serif"],
-                    FontWeight = 400,
+                    FontWeight = "400",
                     FontSize = ".875rem",
-                    LineHeight = 1.43,
+                    LineHeight = "1.43",
                     LetterSpacing = ".01071em",
                     TextTransform = "none",
                 },
-                H1 = new H1
+                H1 = new H1Typography
                 {
-                    FontWeight = 300,
+                    FontWeight = "300",
                     FontSize = "6rem",
-                    LineHeight = 1.167,
+                    LineHeight = "1.167",
                     LetterSpacing = "-.01562em",
                     TextTransform = "none",
                 },
-                H2 = new H2
+                H2 = new H2Typography
                 {
-                    FontWeight = 300,
+                    FontWeight = "300",
                     FontSize = "3.75rem",
-                    LineHeight = 1.2,
+                    LineHeight = "1.2",
                     LetterSpacing = "-.00833em",
                     TextTransform = "none",
                 },
-                H3 = new H3
+                H3 = new H3Typography
                 {
-                    FontWeight = 400,
+                    FontWeight = "400",
                     FontSize = "3rem",
-                    LineHeight = 1.167,
+                    LineHeight = "1.167",
                     LetterSpacing = "0",
                     TextTransform = "none",
                 },
-                H4 = new H4
+                H4 = new H4Typography
                 {
-                    FontWeight = 400,
+                    FontWeight = "400",
                     FontSize = "2.125rem",
-                    LineHeight = 1.235,
+                    LineHeight = "1.235",
                     LetterSpacing = ".00735em",
                     TextTransform = "none",
                 },
-                H5 = new H5
+                H5 = new H5Typography
                 {
-                    FontWeight = 400,
+                    FontWeight = "400",
                     FontSize = "1.5rem",
-                    LineHeight = 1.334,
+                    LineHeight = "1.334",
                     LetterSpacing = "0",
                     TextTransform = "none",
                 },
-                H6 = new H6
+                H6 = new H6Typography
                 {
-                    FontWeight = 500,
+                    FontWeight = "500",
                     FontSize = "1.25rem",
-                    LineHeight = 1.6,
+                    LineHeight = "1.6",
                     LetterSpacing = ".0075em",
                     TextTransform = "none",
                 },
-                Subtitle1 = new Subtitle1
+                Subtitle1 = new Subtitle1Typography
                 {
-                    FontWeight = 400,
+                    FontWeight = "400",
                     FontSize = "1rem",
-                    LineHeight = 1.75,
+                    LineHeight = "1.75",
                     LetterSpacing = ".00938em",
                     TextTransform = "none",
                 },
-                Subtitle2 = new Subtitle2
+                Subtitle2 = new Subtitle2Typography
                 {
-                    FontWeight = 500,
+                    FontWeight = "500",
                     FontSize = ".875rem",
-                    LineHeight = 1.57,
+                    LineHeight = "1.57",
                     LetterSpacing = ".00714em",
                     TextTransform = "none",
                 },
-                Body1 = new Body1
+                Body1 = new Body1Typography
                 {
-                    FontWeight = 400,
+                    FontWeight = "400",
                     FontSize = "1rem",
-                    LineHeight = 1.5,
+                    LineHeight = "1.5",
                     LetterSpacing = ".00938em",
                     TextTransform = "none",
                 },
-                Body2 = new Body2
+                Body2 = new Body2Typography
                 {
-                    FontWeight = 400,
+                    FontWeight = "400",
                     FontSize = ".875rem",
-                    LineHeight = 1.43,
+                    LineHeight = "1.43",
                     LetterSpacing = ".01071em",
                     TextTransform = "none",
                 },
-                Input = new Input
+                Button = new ButtonTypography
                 {
-                    FontWeight = 400,
-                    FontSize = "1rem",
-                    LineHeight = 1.1876,
-                    LetterSpacing = ".00938em",
-                    TextTransform = "none",
-                },
-                Button = new Button
-                {
-                    FontWeight = 500,
+                    FontWeight = "500",
                     FontSize = ".875rem",
-                    LineHeight = 1.75,
+                    LineHeight = "1.75",
                     LetterSpacing = ".02857em",
                     TextTransform = "uppercase",
                 },
-                Caption = new Caption
+                Caption = new CaptionTypography
                 {
-                    FontWeight = 400,
+                    FontWeight = "400",
                     FontSize = ".75rem",
-                    LineHeight = 1.66,
+                    LineHeight = "1.66",
                     LetterSpacing = ".03333em",
                     TextTransform = "none",
                 },
-                Overline = new Overline
+                Overline = new OverlineTypography
                 {
-                    FontWeight = 400,
+                    FontWeight = "400",
                     FontSize = ".75rem",
-                    LineHeight = 2.66,
+                    LineHeight = "2.66",
                     LetterSpacing = ".08333em",
                     TextTransform = "none",
                 },
@@ -484,124 +476,116 @@ namespace Web.UI.Data
             },
             Typography = new Typography()
             {
-                Default = new Default
+                Default = new DefaultTypography
                 {
                     FontFamily = ["Roboto", "Helvetica", "Arial", "sans-serif"],
-                    FontWeight = 400,
+                    FontWeight = "400",
                     FontSize = ".875rem",
-                    LineHeight = 1.43,
+                    LineHeight = "1.43",
                     LetterSpacing = ".01071em",
                     TextTransform = "none",
                 },
-                H1 = new H1
+                H1 = new H1Typography
                 {
-                    FontWeight = 300,
+                    FontWeight = "300",
                     FontSize = "6rem",
-                    LineHeight = 1.167,
+                    LineHeight = "1.167",
                     LetterSpacing = "-.01562em",
                     TextTransform = "none",
                 },
-                H2 = new H2
+                H2 = new H2Typography
                 {
-                    FontWeight = 300,
+                    FontWeight = "300",
                     FontSize = "3.75rem",
-                    LineHeight = 1.2,
+                    LineHeight = "1.2",
                     LetterSpacing = "-.00833em",
                     TextTransform = "none",
                 },
-                H3 = new H3
+                H3 = new H3Typography
                 {
-                    FontWeight = 400,
+                    FontWeight = "400",
                     FontSize = "3rem",
-                    LineHeight = 1.167,
+                    LineHeight = "1.167",
                     LetterSpacing = "0",
                     TextTransform = "none",
                 },
-                H4 = new H4
+                H4 = new H4Typography
                 {
-                    FontWeight = 400,
+                    FontWeight = "400",
                     FontSize = "2.125rem",
-                    LineHeight = 1.235,
+                    LineHeight = "1.235",
                     LetterSpacing = ".00735em",
                     TextTransform = "none",
                 },
-                H5 = new H5
+                H5 = new H5Typography
                 {
-                    FontWeight = 400,
+                    FontWeight = "400",
                     FontSize = "1.5rem",
-                    LineHeight = 1.334,
+                    LineHeight = "1.334",
                     LetterSpacing = "0",
                     TextTransform = "none",
                 },
-                H6 = new H6
+                H6 = new H6Typography
                 {
-                    FontWeight = 500,
+                    FontWeight = "500",
                     FontSize = "1.25rem",
-                    LineHeight = 1.6,
+                    LineHeight = "1.6",
                     LetterSpacing = ".0075em",
                     TextTransform = "none",
                 },
-                Subtitle1 = new Subtitle1
+                Subtitle1 = new Subtitle1Typography
                 {
-                    FontWeight = 400,
+                    FontWeight = "400",
                     FontSize = "1rem",
-                    LineHeight = 1.75,
+                    LineHeight = "1.75",
                     LetterSpacing = ".00938em",
                     TextTransform = "none",
                 },
-                Subtitle2 = new Subtitle2
+                Subtitle2 = new Subtitle2Typography
                 {
-                    FontWeight = 500,
+                    FontWeight = "500",
                     FontSize = ".875rem",
-                    LineHeight = 1.57,
+                    LineHeight = "1.57",
                     LetterSpacing = ".00714em",
                     TextTransform = "none",
                 },
-                Body1 = new Body1
+                Body1 = new Body1Typography
                 {
-                    FontWeight = 700,
+                    FontWeight = "700",
                     FontSize = "1rem",
-                    LineHeight = 1.5,
+                    LineHeight = "1.5",
                     LetterSpacing = ".00938em",
                     TextTransform = "none",
                 },
-                Body2 = new Body2
+                Body2 = new Body2Typography
                 {
-                    FontWeight = 400,
+                    FontWeight = "400",
                     FontSize = ".875rem",
-                    LineHeight = 1.43,
+                    LineHeight = "1.43",
                     LetterSpacing = ".01071em",
                     TextTransform = "none",
                 },
-                Input = new Input
+                Button = new ButtonTypography
                 {
-                    FontWeight = 400,
-                    FontSize = "1rem",
-                    LineHeight = 1.1876,
-                    LetterSpacing = ".00938em",
-                    TextTransform = "none",
-                },
-                Button = new Button
-                {
-                    FontWeight = 500,
+                    FontWeight = "500",
                     FontSize = ".875rem",
-                    LineHeight = 1.75,
+                    LineHeight = "1.75",
                     LetterSpacing = ".02857em",
                     TextTransform = "uppercase",
                 },
-                Caption = new Caption
+                Caption = new CaptionTypography
                 {
-                    FontWeight = 400,
+                    FontWeight = "400",
                     FontSize = ".75rem",
-                    LineHeight = 1.66,
+                    LineHeight = "1.66",
                     LetterSpacing = ".03333em",
                     TextTransform = "none",
                 },
-                Overline = new Overline
+                Overline = new OverlineTypography
                 {
-                    FontWeight = 400,
+                    FontWeight = "400",
                     FontSize = ".75rem",
-                    LineHeight = 2.66,
+                    LineHeight = "2.66",
                     LetterSpacing = ".08333em",
                     TextTransform = "none",
                 },

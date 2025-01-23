@@ -1,140 +1,47 @@
-@page "/appointments"
-
-<PageTitle>Appointments</PageTitle>
-
-<div class="row mb-3 text-left">
-    <div class="col-md-1-5">
-        <h3 class="page-header">Appointments</h3>
-    </div>
-    <div class="col-md-1-5">
-        <a href="/appointment/" class="btn btn-pink w-100">Add New</a>
-    </div>
-    <div class="col-md-9"></div>
-</div>
-
-<br />
-<br />
-<br />
-
-@if (lstAppointments != null)
-{
-    if (lstAppointments.Count > 0)
-    {
-        <div style="display:grid;">
-            <MudDataGrid @ref=@refGrid
-                         Class="filter-black-pink-muddatagrid-svg mud-data-grid" Items="lstAppointments" T="Appointment"
-                         ColumnsPanelReordering="true"
-                         DragDropColumnReordering="true"
-                         Filterable="true"
-                         FilterMode="@DataGridFilterMode.Simple"
-                         FilterCaseSensitivity="@DataGridFilterCaseSensitivity.Ignore"
-                         FixedHeader="true"
-                         FixedFooter="true"
-                         Height="50vh"
-                         Hideable="true"
-                         HorizontalScrollbar="true"
-                         ShowMenuIcon="true">
-                <ToolBarContent>
-                </ToolBarContent>
-                <Columns>
-                    <PropertyColumn T="Appointment" TProperty="string" Groupable="true" Property="x => x.col1" Filterable="false" />
-                    <PropertyColumn T="Appointment" TProperty="string" Groupable="true" Property="x => x.col2"  />
-                    <PropertyColumn T="Appointment" TProperty="string" Groupable="true" Property="x => x.col3" Filterable="false" />
-                    <PropertyColumn T="Appointment" TProperty="string" Groupable="true" Property="x => x.col4"  />
-                    <PropertyColumn T="Appointment" TProperty="string" Groupable="true" Property="x => x.col5"  />
-                    <PropertyColumn T="Appointment" TProperty="string" Groupable="true" Property="x => x.col6"  />
-                    <PropertyColumn T="Appointment" TProperty="string" Groupable="true" Property="x => x.col7" Filterable="false" />
-                    <PropertyColumn T="Appointment" TProperty="string" Groupable="true" Property="x => x.col8" Filterable="false" />                    
-                    <TemplateColumn CellClass="d-flex justify-end" Title="Actions" Groupable="false">
-                        <CellTemplate>
-                            <MudIconButton Size="@Size.Small" Class="no-filter-black-pink-muddatagrid-svg" Color="Color.Info" Icon="@Icons.Material.Outlined.Edit" OnClick="@(async () => { await EditAppointment(); })" />
-                            <MudIconButton Size="@Size.Small" Class="no-filter-black-pink-muddatagrid-svg" Color="Color.Error" Icon="@Icons.Material.Outlined.DeleteForever" OnClick="@(async () => { await DeleteAppointmentAsync(); })" />
-                        </CellTemplate>
-                    </TemplateColumn>
-                </Columns>
-            </MudDataGrid>
-<MudDataGridPager @ref=@refGridPager T="Appointment" />
-        </div>
-    }
-    else
-    {
-        <label><i>No Appointment found!</i></label>
-    }
-}
-else
-{
-    <label><i>Loading</i></label>
-}
+<MudDialog Style="height: 100%">
+    <DialogContent>
+        <MudMenu Dense PositionAtCursor>
+            <ActivatorContent>
+                @{
+                    var priority = "1";
+                    switch (priority)
+                    {
+                        case "1":
+                            <MudChip T="string" Size="Size.Small" Label="true" Variant="Variant.Filled" style="font-weight: normal; color: black; background-color: #FED6D3">Priority 1</MudChip>
+                            break;
+                        case "2":
+                            <MudChip T="string" Size="Size.Small" Label="true" Variant="Variant.Filled" style="font-weight: normal; color: black; background-color: #FDDFCA">Priority 2</MudChip>
+                            break;
+                        case "3":
+                            <MudChip T="string" Size="Size.Small" Label="true" Variant="Variant.Filled" style="font-weight: normal; color: black; background-color: #F6E8A7">Priority 3</MudChip>
+                            break;
+                        case "4":
+                            <MudChip T="string" Size="Size.Small" Label="true" Variant="Variant.Filled" style="font-weight: normal; color: black; background-color: #C8ECFA">Priority 4</MudChip>
+                            break;
+                        case "5":
+                            <MudChip T="string" Size="Size.Small" Label="true" Variant="Variant.Filled" style="font-weight: normal; color: black; background-color: #CEDFFD">Priority 5</MudChip>
+                            break;
+                        case null:
+                            <MudChip T="string" Size="Size.Small" Label="true" Variant="Variant.Filled">None</MudChip>
+                            break;
+                    }
+                }
+            </ActivatorContent>
+            <ChildContent>
+                <div style="min-width: 100px">
+                    <MudMenuItem style="font-weight: normal; color: black; background-color: #FED6D3">Priority 1</MudMenuItem>
+                    <MudMenuItem style="font-weight: normal; color: black; background-color: #FDDFCA">Priority 2</MudMenuItem>
+                    <MudMenuItem style="font-weight: normal; color: black; background-color: #F6E8A7">Priority 3</MudMenuItem>
+                    <MudMenuItem style="font-weight: normal; color: black; background-color:#C8ECFA">Priority 4</MudMenuItem>
+                    <MudMenuItem style="font-weight: normal; color: black; background-color:#CEDFFD">Priority 5</MudMenuItem>
+                    <MudMenuItem>None</MudMenuItem>
+                </div>
+            </ChildContent>
+        </MudMenu>
+    </DialogContent>
+</MudDialog>
 
 @code {
-
-    private List<Appointment>? lstAppointments { get; set; }
-    MudDataGrid<Appointment>? refGrid;
-    MudDataGridPager<Appointment>? refGridPager;
-
-    protected async override Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (firstRender)
-        {
-            Appointment apt = new Appointment();            
-            lstAppointments = apt.GetListExample();           
-            StateHasChanged();
-        }
-        if (refGrid != null && refGridPager != null)
-        {
-            if (refGridPager.DataGrid != refGrid)
-            {
-                refGridPager.DataGrid = refGrid;                
-                var parameterDictionary = new Dictionary<string, object?>()
-                {
-                    { "DataGrid", refGrid },
-                };                
-                var parameterView = ParameterView.FromDictionary(parameterDictionary);
-                await refGridPager.SetParametersAsync(parameterView);
-                await InvokeAsync(StateHasChanged);
-            }
-        }
-    }
-
-    private async Task DeleteAppointmentAsync()
-    {
-       
-    }
-
-    private async Task EditAppointment()
-    {
-        
-    }
-
-    public class Appointment
-    {
-        public string col1 {get; set;}
-        public string col2 {get; set;}
-        public string col3 {get; set;}
-        public string col4 {get; set;}
-        public string col5 {get; set;}
-        public string col6 {get; set;}
-        public string col7 {get; set;}
-        public string col8 {get; set;}
-
-        public List<Appointment> GetListExample()
-        {
-            List<Appointment> lst = new List<Appointment>()
-            {
-                new Appointment() 
-                { 
-                    col1 = "col1row1", 
-                    col2 = "col2row1", 
-                    col3 = "col3row1", 
-                    col4 = "col4row1", 
-                    col5 = "col5row1", 
-                    col6 = "col6row1", 
-                    col7 = "col7row1", 
-                    col8 = "col8row1"
-                }
-            };
-
-            return lst;   
-        }
-    }
+    [Parameter]
+    public required string Hello { get; set; }
 }
