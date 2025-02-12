@@ -1,26 +1,30 @@
 @page "/MudTry"
+@inject ISnackbar SnackbarService
 
-<MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="ButtonOnClick">Click</MudButton>
-
+<MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@OnClick">Show a RenderFragment snackbar</MudButton>
 @code {
-    [Inject]
-    public required IDialogService dialogService { get; set; }
+    private Snackbar? _snackbar;
 
-    async Task ButtonOnClick()
+    private void OnClick()
     {
-        DialogParameters parameters = new DialogParameters<TestComponent>
-            {
-                { x => x.Hello, "World" }
-            };
+        SnackbarService.Clear();
+        SnackbarService.Configuration.PositionClass = Defaults.Classes.Position.BottomCenter;
+        _snackbar = SnackbarService.Add
+    (
+    @<TestComponent OnClose="CloseSnackbar" />     
+        , Severity.Normal, config => {
+            config.RequireInteraction = true;
+            config.ShowCloseIcon = false;
+            config.HideIcon = true;
+        });
+    }
 
-        DialogOptions options = new DialogOptions
-            {
-                CloseOnEscapeKey = true,
-                FullWidth = true,
-                MaxWidth = MaxWidth.Large,
-                Position = DialogPosition.TopCenter
-            };
-
-        await dialogService.ShowAsync<TestComponent>("TestDialog", parameters, options);
+    private void CloseSnackbar()
+    {
+        if (_snackbar != null)
+        {
+            SnackbarService.Remove(_snackbar);
+            _snackbar = default;
+        }
     }
 }
