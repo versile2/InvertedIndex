@@ -14,7 +14,7 @@ namespace Web.DAL.Data
         }
         public void Initialize()
         {
-            //this.Database.Migrate();
+            this.Database.Migrate();
         }
         private void SeedInMemoryDatabase()
         {
