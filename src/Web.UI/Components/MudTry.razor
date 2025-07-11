@@ -1,0 +1,34 @@
+@page "/MudTry"
+
+<MudDataGrid @ref=_dataGrid T="Poco" Items="items">
+    <Columns>
+        <PropertyColumn T="Poco" TProperty="string" Property="x => x.Prop1" GroupByOrder="1"/>
+        <TestComponent />
+        <PropertyColumn T="Poco" TProperty="string" Property="x => x.Prop3" GroupByOrder="3" />
+    </Columns>
+</MudDataGrid>
+
+@code {
+    private IEnumerable<Poco> items = Array.Empty<Poco>();
+    private MudDataGrid<Poco> _dataGrid = default!;
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (firstRender)
+        {
+            // cycle through _dataGrid.RenderedColumns and reindex them by x => x.GroupByOrder
+            // can't set RenderedColumns directly, so we need to reassign them
+            var columns = _dataGrid?.RenderedColumns.OrderBy(x => x.GroupByOrder).ToList() ?? [];
+            if (columns is {Count: > 0})
+            {
+                for (int i = 0; i < columns.Count; i++)
+                {
+                    var col = columns[i];
+                    _dataGrid.RenderedColumns.Remove(col);
+                    _dataGrid.RenderedColumns.Insert(i, col);
+                }
+            }
+            StateHasChanged();
+        }
+    }
+}
