@@ -1,34 +1,152 @@
 @page "/MudTry"
 
-<MudDataGrid @ref=_dataGrid T="Poco" Items="items">
+<MudTextField T="string"
+              @bind-Value="_searchText"
+              Placeholder="Search Trial or Juror"
+              Adornment="Adornment.Start"
+              Immediate="true"
+              FullWidth="true"
+              Class="ml-1 pl-1 mb-2 mr-2 pr-2 mt-n2 pt-n2"
+              AutoFocus="true"
+              DebounceInterval="250"
+              Clearable="true"
+              AdornmentIcon="@Icons.Material.Filled.Search"
+              IconSize="Size.Medium" />
+<MudDataGrid Items="FilteredResults"
+             RowsPerPage="4"
+             ShowColumnOptions="false"
+             SortMode="SortMode.None"
+             Hover="true"
+             Dense="true"
+             Striped="true"
+             SelectOnRowClick="true"
+             LoadingProgressColor="Color.Info"
+             Class="toolbar-max-height">
+    <NoRecordsContent>
+        <MudText Typo="Typo.h6">No Trials Found</MudText>
+    </NoRecordsContent>
+    <ToolBarContent>
+        <MudText Typo="Typo.h6"></MudText>
+        <MudSpacer />
+        <div class="ma-0 pa-0">
+            <MudButton Color="Color.Tertiary" Variant="Variant.Filled" OnClick="@(() => _addItemOpen = !_addItemOpen)">Add Item</MudButton>
+            <MudPopover Open="@_addItemOpen" AnchorOrigin="Origin.BottomLeft" TransformOrigin="Origin.TopRight">
+                <MudTextField @bind-Value="_newItemName"
+                              Style="width 300px;"
+                              Immediate
+                              Placeholder="Name the Trial" />
+                <MudButton OnClick="CancelNewItem" Variant="Variant.Filled" Color="Color.Default">Cancel</MudButton>
+                <MudButton OnClick="AddNewItem" Variant="Variant.Filled" Color="Color.Success">Add</MudButton>
+            </MudPopover>
+            <MudOverlay @bind-Visible="@_addItemOpen" />
+        </div>
+    </ToolBarContent>
     <Columns>
-        <PropertyColumn T="Poco" TProperty="string" Property="x => x.Prop1" GroupByOrder="1"/>
-        <TestComponent />
-        <PropertyColumn T="Poco" TProperty="string" Property="x => x.Prop3" GroupByOrder="3" />
+        <TemplateColumn Title="Date" CellStyle="width: 50px;">
+            <CellTemplate>
+                @if (context.Item != null && context.Item.TrialDate.HasValue)
+                {
+                    <span>@context.Item.TrialDate.Value.ToString("MM/dd/yy")</span>
+                }
+                else
+                {
+                    <span>&nbsp;</span>
+                }
+                @if (context.Item != null && context.Item.JurorId > 0)
+                {
+                    <span><br />&nbsp;</span>
+                }
+            </CellTemplate>
+        </TemplateColumn>
+        <TemplateColumn Title="@(string.IsNullOrWhiteSpace(_searchText) ? "Case Number" : "Case No/Juror")">
+            <CellTemplate>
+                @if (context.Item != null && context.Item.JurorId > 0)
+                {
+                    <b>@context.Item.CaseNumber</b>
+                    <br />
+                    <span style="margin-left: -75px;">DL: @(context.Item.ToJuror())</span>
+                }
+                else
+                {
+                    <b>@context.Item?.CaseNumber</b>
+                }
+            </CellTemplate>
+        </TemplateColumn>
     </Columns>
+    <PagerContent>
+        <MudDataGridPager PageSizeSelector="false" />
+    </PagerContent>
 </MudDataGrid>
 
 @code {
-    private IEnumerable<Poco> items = Array.Empty<Poco>();
-    private MudDataGrid<Poco> _dataGrid = default!;
+    private string _searchText = string.Empty;
+    private bool _addItemOpen = false;
+    private string _newItemName = string.Empty;
+    private List<DRSSearch> Results = new List<DRSSearch>();
+    private List<DRSSearch> FilteredResults => string.IsNullOrWhiteSpace(_searchText)
+        ? Results
+        : Results.Where(r => (r.CaseNumber != null && r.CaseNumber.Contains(_searchText, StringComparison.OrdinalIgnoreCase)) ||
+                             (r.JurorLastName != null && r.JurorLastName.Contains(_searchText, StringComparison.OrdinalIgnoreCase)) ||
+                             (r.JurorFirstName != null && r.JurorFirstName.Contains(_searchText, StringComparison.OrdinalIgnoreCase)) ||
+                             (r.JurorMiddleName != null && r.JurorMiddleName.Contains(_searchText, StringComparison.OrdinalIgnoreCase))).ToList();
 
-    protected override void OnAfterRender(bool firstRender)
+    protected override void OnInitialized()
     {
-        if (firstRender)
+        base.OnInitialized();
+        // create some sample data
+        Results = new List<DRSSearch>
         {
-            // cycle through _dataGrid.RenderedColumns and reindex them by x => x.GroupByOrder
-            // can't set RenderedColumns directly, so we need to reassign them
-            var columns = _dataGrid?.RenderedColumns.OrderBy(x => x.GroupByOrder).ToList() ?? [];
-            if (columns is {Count: > 0})
+            new DRSSearch { Id = 1, CaseNumber = "2023CR1234", TrialDate = new DateTime(2023, 10, 15), JurorId = 101, JurorLastName = "Smith", JurorFirstName = "John" },
+            new DRSSearch { Id = 2, CaseNumber = "2023CR5678", TrialDate = new DateTime(2023, 11, 20), JurorId = 102, JurorLastName = "Doe", JurorFirstName = "Jane" },
+            new DRSSearch { Id = 3, CaseNumber = "2023CR9101", TrialDate = new DateTime(2023, 12, 5) },
+            new DRSSearch { Id = 4, CaseNumber = "2024CR1121", TrialDate = new DateTime(2024, 1, 10), JurorId = 103, JurorLastName = "Brown", JurorFirstName = "Charlie" },
+            new DRSSearch { Id = 5, CaseNumber = "2024CR3141", TrialDate = new DateTime(2024, 2, 14) }
+        };
+    }
+
+    private void AddNewItem()
+    {
+        if (!string.IsNullOrWhiteSpace(_newItemName))
+        {
+            var newTrial = new DRSSearch
             {
-                for (int i = 0; i < columns.Count; i++)
-                {
-                    var col = columns[i];
-                    _dataGrid.RenderedColumns.Remove(col);
-                    _dataGrid.RenderedColumns.Insert(i, col);
-                }
-            }
-            StateHasChanged();
+                CaseNumber = _newItemName,
+                TrialDate = DateTime.Now
+            };
+            Results.Add(newTrial);
+            CancelNewItem();
+        }
+    }
+
+    private void CancelNewItem()
+    {
+        _newItemName = string.Empty;
+        _addItemOpen = false;
+        _addItemOpen = !_addItemOpen;
+    }
+
+}
+
+@code {
+    public class DRSSearch
+    {
+        public int Id { get; set; }
+        public string CaseNumber { get; set; } = string.Empty;
+        public DateTime? TrialDate { get; set; }
+        public int JurorId { get; set; }
+        public string JurorLastName { get; set; } = string.Empty;
+        public string JurorFirstName { get; set; } = string.Empty;
+        public string JurorMiddleName { get; set; } = string.Empty;
+
+        public string ToJuror()
+        {
+            if (string.IsNullOrWhiteSpace(JurorFirstName) && string.IsNullOrWhiteSpace(JurorLastName))
+                return string.Empty;
+            if (string.IsNullOrWhiteSpace(JurorFirstName))
+                return JurorLastName;
+            if (string.IsNullOrWhiteSpace(JurorLastName))
+                return JurorFirstName;
+            return $"{JurorLastName}, {JurorFirstName} {(string.IsNullOrWhiteSpace(JurorMiddleName) ? string.Empty : JurorMiddleName)}";
         }
     }
 }

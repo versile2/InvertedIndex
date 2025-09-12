@@ -1,1 +1,118 @@
-<PropertyColumn T="Poco" TProperty="string" Property="x => x.Prop2" GroupByOrder="2"/>
+@using MudBlazor
+@using System.Text.RegularExpressions
+
+<MudDialog>
+    <DialogContent>
+        <MudText Class="my-2">Send results to the following email(s):</MudText>
+
+        <MudChipSet T="string" AllClosable OnClose="RemoveEmail" Class="mb-5">
+            @foreach (var email in _recipients)
+            {
+                <MudChip Text="@email" Value="@email" />
+            }
+        </MudChipSet>
+        <MudTextField T="string"
+                        @ref="EmailField"
+                        Validation="new Func<string?, string?>(ValidateEmailField)"
+                        @bind-Value="_currentInput"
+                        Label="Add recipient"
+                        HelperText="Type email and press enter to add"
+                        Clearable
+                        @onkeydown="HandleKeyDown"
+                        Variant="Variant.Outlined"
+                        TextUpdateSuppression="false"
+                        Immediate="true" />
+
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Submit" Color="Color.Primary" Disabled="_recipients.Count == 0" Variant="Variant.Filled">Send</MudButton>
+        <MudButton OnClick="Cancel" Variant="Variant.Text">Cancel</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = default!;
+    [Parameter] public string InitialEmail { get; set; } = "";
+    private MudTextField<string> EmailField { get; set; }
+
+    private List<string> _recipients = new();
+    private string _currentInput { get; set; } = "";
+
+    private void ClearCurrentInput()
+    {
+        _currentInput = "";
+    }
+
+    protected override void OnInitialized()
+    {
+        if (!string.IsNullOrWhiteSpace(InitialEmail))
+            _recipients.Add(InitialEmail);
+    }
+
+    private async void HandleKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            await EmailField!.Validate();
+
+            if (!EmailField.HasErrors)
+            {
+                AddEmail();
+                EmailField.ResetValidation();
+            }
+        }
+    }
+
+    private bool IsValidEmail(string email)
+    {
+        return Regex.IsMatch(email, @"^[^@\s]+@[^@\s]+\.[^@\s]+$");
+    }
+
+    private string ValidateEmailField(string value)
+    {
+        var email = value.Trim().ToUpper();
+        List<string> recipients = _recipients.Select(x => x.ToUpper()).ToList();
+        
+
+        if (string.IsNullOrEmpty(email))
+            return null;
+
+        if (!IsValidEmail(email))
+            return "Enter a valid email";
+
+        if (recipients.Contains(email))
+            return "Email already added";
+
+        return null;
+    }
+
+
+    private void AddEmail()
+    {
+        var email = _currentInput.Trim();
+        if (!string.IsNullOrEmpty(email) && !_recipients.Contains(email) && IsValidEmail(email))
+        {
+            _recipients.Add(email);
+            ClearCurrentInput();
+        }
+    }
+
+    private void RemoveEmail(MudChip<string> chip)
+    {
+        string email = chip.Value;
+        if (string.IsNullOrWhiteSpace(email))
+            return;
+
+        _recipients.Remove(email);
+    }
+
+    private void Submit()
+    {
+        MudDialog.Close(DialogResult.Ok(_recipients));
+    }
+
+    private void Cancel()
+    {
+        MudDialog.Cancel();
+    }
+}
